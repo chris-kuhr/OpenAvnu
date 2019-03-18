@@ -9,7 +9,6 @@ target_link_libraries( openavb_avdecc
 	avbTl
 	${PLATFORM_LINK_LIBRARIES}
 	${ALSA_LIBRARIES}
-	${JACK_LIBRARIES}
 	${GSTRTP_PKG_LIBRARIES}
 	${GLIB_PKG_LIBRARIES}
 	${GST_PKG_LIBRARIES}
