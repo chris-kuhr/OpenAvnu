@@ -1,12 +1,12 @@
 # generic build settings
 # just builds linux version of stack on host machine
 
-set ( AVB_FEATURE_IGB 0 )
-set ( IGB_LAUNCHTIME_ENABLED 0 )
+set ( AVB_FEATURE_IGB 1 ) # 0
+set ( IGB_LAUNCHTIME_ENABLED 1 ) # 0
 set ( AVB_FEATURE_PCAP 1 )
 
 # Label for messages / build configuration
-set ( OPENAVB_HAL      "generic" )
+set ( OPENAVB_HAL      "x86_i210" ) #generic
 set ( OPENAVB_OSAL     "Linux" )
 set ( OPENAVB_TCAL     "GNU" )
 set ( OPENAVB_PLATFORM "${OPENAVB_HAL}-${OPENAVB_OSAL}" )
@@ -19,6 +19,7 @@ set ( PLATFORM_INCLUDE_DIRECTORIES
 )
 
 include_directories ( platform/generic/include )
+include_directories ( platform/x86_i210/include )
 
 #set ( PLATFORM_DEFINE "AVB_DELAY_TWEAK_USEC=45" )
 

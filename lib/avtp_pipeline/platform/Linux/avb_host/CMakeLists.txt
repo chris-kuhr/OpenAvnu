@@ -24,17 +24,19 @@ target_link_libraries( openavb_host
 	intf_tonegen
 	intf_viewer
 	intf_alsa
-	intf_jack
 	intf_mpeg2ts_file
 	intf_wav_file
 	avbTl
 	${PLATFORM_LINK_LIBRARIES}
 	${ALSA_LIBRARIES}
-	${JACK_LIBRARIES}
 	${GLIB_PKG_LIBRARIES}
 	pthread 
 	rt 
-	dl )
+	dl 
+	${JACK_LIBRARIES}
+	intf_jack
+    pci
+    igb )
 
 
 # Rules to build the AVB harness
@@ -55,17 +57,19 @@ target_link_libraries( openavb_harness
 	intf_tonegen
 	intf_viewer
 	intf_alsa
-	intf_jack
 	intf_mpeg2ts_file
 	intf_wav_file
 	avbTl
 	${PLATFORM_LINK_LIBRARIES}
 	${ALSA_LIBRARIES}
-	${JACK_LIBRARIES}
 	${GLIB_PKG_LIBRARIES}
 	pthread 
 	rt 
-	dl )
+	dl 
+	${JACK_LIBRARIES}
+	intf_jack
+    pci
+    igb )
 
 # Install rules 
 install ( TARGETS openavb_host RUNTIME DESTINATION ${AVB_INSTALL_BIN_DIR} )
