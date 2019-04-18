@@ -33,6 +33,7 @@ target_link_libraries( openavb_host
 	pthread 
 	rt 
 	dl 
+	# link order is important!!! first intf_jack, then jack
 	intf_jack
 	jack
     pci
@@ -66,6 +67,7 @@ target_link_libraries( openavb_harness
 	pthread 
 	rt 
 	dl 
+	# link order is important!!! first intf_jack, then jack
 	intf_jack
 	jack
     pci
