@@ -33,8 +33,8 @@ target_link_libraries( openavb_host
 	pthread 
 	rt 
 	dl 
-	jack
 	intf_jack
+	jack
     pci
     igb )
 
@@ -66,8 +66,8 @@ target_link_libraries( openavb_harness
 	pthread 
 	rt 
 	dl 
-	jack
 	intf_jack
+	jack
     pci
     igb )
 
