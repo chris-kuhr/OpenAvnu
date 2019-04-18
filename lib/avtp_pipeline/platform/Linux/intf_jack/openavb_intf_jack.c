@@ -231,12 +231,12 @@ int init_jack_client(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_por
 
 
 // Each configuration name value pair for this mapping will result in this callback being called.
-void openavbIntfJACK_CfgCB(media_q_t *pMediaQ, const char *name, const char *value){AVB_TRACE_ENTRY(AVB_TRACE_INTF);AVB_TRACE_EXIT(AVB_TRACE_INTF);}
-void openavbIntfJACK_GenInitCB(media_q_t *pMediaQ){AVB_TRACE_ENTRY(AVB_TRACE_INTF);AVB_TRACE_EXIT(AVB_TRACE_INTF);}
+void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *value){AVB_TRACE_ENTRY(AVB_TRACE_INTF);AVB_TRACE_EXIT(AVB_TRACE_INTF);}
+void openavbIntfJACKGenInitCB(media_q_t *pMediaQ){AVB_TRACE_ENTRY(AVB_TRACE_INTF);AVB_TRACE_EXIT(AVB_TRACE_INTF);}
 
 // A call to this callback indicates that this interface module will be
 // a talker. Any talker initialization can be done in this function.
-void openavbIntfJACK_TxInitCB(media_q_t *pMediaQ)
+void openavbIntfJACKTxInitCB(media_q_t *pMediaQ)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
 	if (pMediaQ) {
@@ -257,7 +257,7 @@ void openavbIntfJACK_TxInitCB(media_q_t *pMediaQ)
 }
 
 // This callback will be called for each AVB transmit interval.
-bool openavbIntfJACK_TxCB(media_q_t *pMediaQ)
+bool openavbIntfJACKTxCB(media_q_t *pMediaQ)
 {
 	bool moreItems = TRUE;
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF_DETAIL);
@@ -334,7 +334,7 @@ bool openavbIntfJACK_TxCB(media_q_t *pMediaQ)
 
 // A call to this callback indicates that this interface module will be
 // a listener. Any listener initialization can be done in this function.
-void openavbIntfJACK_RxInitCB(media_q_t *pMediaQ)
+void openavbIntfJACKRxInitCB(media_q_t *pMediaQ)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
 	if (pMediaQ) {
@@ -354,7 +354,7 @@ void openavbIntfJACK_RxInitCB(media_q_t *pMediaQ)
 }
 
 // This callback is called when acting as a listener.
-bool openavbIntfJACK_RxCB(media_q_t *pMediaQ)
+bool openavbIntfJACKRxCB(media_q_t *pMediaQ)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF_DETAIL);
 
@@ -408,7 +408,7 @@ bool openavbIntfJACK_RxCB(media_q_t *pMediaQ)
 
 // This callback will be called when the interface needs to be closed. All shutdown should
 // occur in this function.
-void openavbIntfJACK_EndCB(media_q_t *pMediaQ)
+void openavbIntfJACKEndCB(media_q_t *pMediaQ)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
 	if (pMediaQ) {
@@ -432,13 +432,13 @@ void openavbIntfJACK_EndCB(media_q_t *pMediaQ)
 	AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
 
-void openavbIntfJACK_GenEndCB(media_q_t *pMediaQ)
+void openavbIntfJACKGenEndCB(media_q_t *pMediaQ)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
 	AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
 
-void openavbIntfJACK_EnableFixedTimestamp(media_q_t *pMediaQ, bool enabled, U32 transmitInterval, U32 batchFactor)
+void openavbIntfJACKEnableFixedTimestamp(media_q_t *pMediaQ, bool enabled, U32 transmitInterval, U32 batchFactor)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
 	if (pMediaQ && pMediaQ->pPvtIntfInfo && pMediaQ->pPubMapInfo) {
@@ -519,7 +519,7 @@ Returns:    the estimated time in frames for the specified system time.
 }
 
 // Main initialization entry point into the interface module
-extern DLL_EXPORT bool openavbIntfJACK_Initialize(media_q_t *pMediaQ, openavb_intf_cb_t *pIntfCB)
+extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_intf_cb_t *pIntfCB)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
 
@@ -533,15 +533,15 @@ extern DLL_EXPORT bool openavbIntfJACK_Initialize(media_q_t *pMediaQ, openavb_in
 
 		pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
 
-		pIntfCB->intf_cfg_cb = openavbIntfJACK_CfgCB;
-		pIntfCB->intf_gen_init_cb = openavbIntfJACK_GenInitCB;
-		pIntfCB->intf_tx_init_cb = openavbIntfJACK_TxInitCB;
-		pIntfCB->intf_tx_cb = openavbIntfJACK_TxCB;
-		pIntfCB->intf_rx_init_cb = openavbIntfJACK_RxInitCB;
-		pIntfCB->intf_rx_cb = openavbIntfJACK_RxCB;
-		pIntfCB->intf_end_cb = openavbIntfJACK_EndCB;
-		pIntfCB->intf_gen_end_cb = openavbIntfJACK_GenEndCB;
-		pIntfCB->intf_enable_fixed_timestamp = openavbIntfJACK_EnableFixedTimestamp;
+		pIntfCB->intf_cfg_cb = openavbIntfJACKCfgCB;
+		pIntfCB->intf_gen_init_cb = openavbIntfJACKGenInitCB;
+		pIntfCB->intf_tx_init_cb = openavbIntfJACKTxInitCB;
+		pIntfCB->intf_tx_cb = openavbIntfJACKTxCB;
+		pIntfCB->intf_rx_init_cb = openavbIntfJACKRxInitCB;
+		pIntfCB->intf_rx_cb = openavbIntfJACKRxCB;
+		pIntfCB->intf_end_cb = openavbIntfJACKEndCB;
+		pIntfCB->intf_gen_end_cb = openavbIntfJACKGenEndCB;
+		pIntfCB->intf_enable_fixed_timestamp = openavbIntfJACKEnableFixedTimestamp;
 
 		pPvtData->ignoreTimestamp = FALSE;
 		pPvtData->intervalCounter = 0;
