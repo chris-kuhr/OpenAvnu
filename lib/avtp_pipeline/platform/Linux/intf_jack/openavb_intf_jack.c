@@ -239,6 +239,13 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
     AVB_TRACE_ENTRY(AVB_TRACE_INTF);
     AVB_LOG_INFO("openavbIntfJACKCfgCB called.");
     
+	pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
+	if (!pPvtData) {
+		AVB_LOG_ERROR("Private interface module data not allocated.");
+		return;
+	}
+		
+		
 	media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo;
 	pPubMapUncmpAudioInfo = (media_q_pub_map_uncmp_audio_info_t *)pMediaQ->pPubMapInfo;
 	if (!pPubMapUncmpAudioInfo) {
