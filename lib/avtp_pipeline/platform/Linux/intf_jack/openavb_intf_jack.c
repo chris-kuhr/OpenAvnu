@@ -155,6 +155,7 @@ int init_jack_ports(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_port
 {
     char portString[32];
     sprintf( portString, "aaf_ch_%d", channelNumber );
+	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
 
     pPvtData->jackPorts[ channelNumber ]
             = jack_port_register( pPvtData->jack_client_ctx,
@@ -186,6 +187,9 @@ int init_jack_client(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_por
 {
     jack_options_t jackOptions;
     jack_status_t jackStatus;
+    
+	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
+    AVB_LOG_INFO("Call init_jack_client.");
 
     pPvtData->audioRate = AVB_AUDIO_RATE_48KHZ;
     pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_32BIT;
@@ -216,12 +220,14 @@ int init_jack_client(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_por
 
     for( int k=0; k<pPvtData->audioChannels; k++){
         if( init_jack_ports(pPvtData, tl_jack_port_type, k) ){
+            AVB_LOG_ERROR("Unable to init JACK clientPorts.");
+            AVB_TRACE_EXIT(AVB_TRACE_INTF);
             return -1;
         }
     }
 
     if( jack_activate( pPvtData->jack_client_ctx ) ) {
-        AVB_LOG_ERROR("Unable to activate to JACK client.");
+        AVB_LOG_ERROR("Unable to activate JACK client.");
         AVB_TRACE_EXIT(AVB_TRACE_INTF);
         return -1;
     }
@@ -231,14 +237,17 @@ int init_jack_client(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_por
 
 
 // Each configuration name value pair for this mapping will result in this callback being called.
-void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *value){AVB_TRACE_ENTRY(AVB_TRACE_INTF);AVB_TRACE_EXIT(AVB_TRACE_INTF);}
-void openavbIntfJACKGenInitCB(media_q_t *pMediaQ){AVB_TRACE_ENTRY(AVB_TRACE_INTF);AVB_TRACE_EXIT(AVB_TRACE_INTF);}
+void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *value){AVB_TRACE_ENTRY(AVB_TRACE_INTF);AVB_LOG_INFO("openavbIntfJACKCfgCB called.");AVB_TRACE_EXIT(AVB_TRACE_INTF);}
+void openavbIntfJACKGenInitCB(media_q_t *pMediaQ){AVB_TRACE_ENTRY(AVB_TRACE_INTF);AVB_LOG_INFO("openavbIntfJACKGenInitCB called.");AVB_TRACE_EXIT(AVB_TRACE_INTF);}
 
 // A call to this callback indicates that this interface module will be
 // a talker. Any talker initialization can be done in this function.
 void openavbIntfJACKTxInitCB(media_q_t *pMediaQ)
 {
+
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
+    AVB_LOG_ERROR("Call init_jack_client.");
+    
 	if (pMediaQ) {
 		pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
 		if (!pPvtData) {
@@ -522,6 +531,7 @@ Returns:    the estimated time in frames for the specified system time.
 extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_intf_cb_t *pIntfCB)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
+    AVB_LOG_INFO("openavbIntfJACKInitialize called");
 
 	if (pMediaQ) {
 		pMediaQ->pPvtIntfInfo = calloc(1, sizeof(pvt_data_t));		// Memory freed by the media queue when the media queue is destroyed.
@@ -531,6 +541,7 @@ extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_int
 			return FALSE;
 		}
 
+        AVB_LOG_INFO("register callbacks");
 		pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
 
 		pIntfCB->intf_cfg_cb = openavbIntfJACKCfgCB;
