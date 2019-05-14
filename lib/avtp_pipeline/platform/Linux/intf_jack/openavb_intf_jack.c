@@ -541,10 +541,6 @@ extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_int
         AVB_LOG_INFO("register callbacks");
 		pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
 
-        AVB_LOG_INFO("config audio format");
-        pPvtData->audioRate = AVB_AUDIO_RATE_48KHZ;
-        pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_32BIT;
-        pPvtData->audioType = AVB_AUDIO_TYPE_FLOAT;
         
 		pIntfCB->intf_cfg_cb = openavbIntfJACKCfgCB;
 		pIntfCB->intf_gen_init_cb = openavbIntfJACKGenInitCB;
@@ -556,6 +552,13 @@ extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_int
 		pIntfCB->intf_gen_end_cb = openavbIntfJACKGenEndCB;
 		pIntfCB->intf_enable_fixed_timestamp = openavbIntfJACKEnableFixedTimestamp;
 
+        AVB_LOG_INFO("config audio format");
+        pPvtData->audioRate = AVB_AUDIO_RATE_48KHZ;
+        pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_32BIT;
+        pPvtData->audioType = AVB_AUDIO_TYPE_FLOAT;
+        pPvtData->audioChannels = AVB_AUDIO_CHANNELS_2;
+        
+        
 		pPvtData->ignoreTimestamp = FALSE;
 		pPvtData->intervalCounter = 0;
 		pPvtData->startThresholdPeriods = 2;	// Default to 2 periods of frames as the start threshold
