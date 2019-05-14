@@ -191,9 +191,6 @@ int init_jack_client(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_por
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
     AVB_LOG_INFO("Call init_jack_client.");
 
-    pPvtData->audioRate = AVB_AUDIO_RATE_48KHZ;
-    pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_32BIT;
-    pPvtData->audioType = AVB_AUDIO_TYPE_FLOAT;
 
     // Open the pcm device.
     pPvtData->jack_client_ctx = jack_client_open( pPvtData->pJACKClientName,
@@ -544,6 +541,11 @@ extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_int
         AVB_LOG_INFO("register callbacks");
 		pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
 
+        AVB_LOG_INFO("config audio format");
+        pPvtData->audioRate = AVB_AUDIO_RATE_48KHZ;
+        pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_32BIT;
+        pPvtData->audioType = AVB_AUDIO_TYPE_FLOAT;
+        
 		pIntfCB->intf_cfg_cb = openavbIntfJACKCfgCB;
 		pIntfCB->intf_gen_init_cb = openavbIntfJACKGenInitCB;
 		pIntfCB->intf_tx_init_cb = openavbIntfJACKTxInitCB;
