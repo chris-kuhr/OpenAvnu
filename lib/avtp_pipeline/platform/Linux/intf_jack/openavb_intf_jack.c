@@ -231,7 +231,6 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
     jack_options_t jackOptions;
     jack_status_t jackStatus;
 
-    AVB_TRACE_ENTRY(AVB_TRACE_INTF);
     AVB_LOG_INFO("Call init_jack_client.");
 
 
@@ -249,6 +248,22 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
     pPvtData->audioRate = (avb_audio_rate_t) jack_get_sample_rate(pPvtData->jack_client_ctx);
 
 
+
+	media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo;
+	pPubMapUncmpAudioInfo = (media_q_pub_map_uncmp_audio_info_t *)pMediaQ->pPubMapInfo;
+	if (!pPubMapUncmpAudioInfo) {
+		AVB_LOG_ERROR("Public map data for audio info not allocated.");
+		return;
+	}
+
+
+	// Give the audio parameters to the mapping module.
+	if (pMediaQ->pMediaQDataFormat) {
+		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
+			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
+			pPubMapUncmpAudioInfo->audioRate = pPvtData->audioRate;
+		}
+	}
 
 //
 //	AVB_LOG_INFO("Config intf_nv_audio_bits.");
@@ -321,25 +336,6 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 			pPubMapUncmpAudioInfo->audioChannels = pPvtData->audioChannels;
 		}
 	}
-
-
-	media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo;
-	pPubMapUncmpAudioInfo = (media_q_pub_map_uncmp_audio_info_t *)pMediaQ->pPubMapInfo;
-	if (!pPubMapUncmpAudioInfo) {
-		AVB_LOG_ERROR("Public map data for audio info not allocated.");
-		return;
-	}
-
-
-	// Give the audio parameters to the mapping module.
-	if (pMediaQ->pMediaQDataFormat) {
-		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
-			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
-			pPubMapUncmpAudioInfo->audioRate = pPvtData->audioRate;
-		}
-	}
-
-
 
     AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
