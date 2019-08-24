@@ -68,7 +68,8 @@ typedef struct {
 	bool ignoreTimestamp;
 
 	// JACK Client and Server names
-	char *pJACKClientName;
+	const char *pJACKClientName = "AVB_Talker";
+;
     char *pJACKServerName;
 
 	U32 startThresholdPeriods;
