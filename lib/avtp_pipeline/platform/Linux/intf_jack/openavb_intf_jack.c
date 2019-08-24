@@ -68,7 +68,7 @@ typedef struct {
 	bool ignoreTimestamp;
 
 	// JACK Client and Server names
-	const char *pJACKClientName = "AVB_Talker";
+	char *pJACKClientName;
 ;
     char *pJACKServerName;
 
@@ -186,6 +186,7 @@ int init_jack_ports(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_port
 
 int init_jack_client(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_port_type )
 {
+    AVB_TRACE_ENTRY(AVB_TRACE_INTF);
 
     int nframes = jack_get_buffer_size(pPvtData->jack_client_ctx);
 
@@ -231,12 +232,14 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 
     jack_options_t jackOptions;
     jack_status_t jackStatus;
+    //sprintf(name3, "AVB_Talker", m);
+
 
     AVB_LOG_INFO("Call init_jack_client.");
 
 
     // Open the pcm device.
-    pPvtData->jack_client_ctx = jack_client_open( pPvtData->pJACKClientName,
+    pPvtData->jack_client_ctx = jack_client_open( "AVB_Talker",//pPvtData->pJACKClientName,
                                                     jackOptions,
                                                     &jackStatus,
                                                     pPvtData->pJACKServerName);
