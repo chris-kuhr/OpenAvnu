@@ -228,21 +228,27 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 	}
 
 
-	media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo;
-	pPubMapUncmpAudioInfo = (media_q_pub_map_uncmp_audio_info_t *)pMediaQ->pPubMapInfo;
-	if (!pPubMapUncmpAudioInfo) {
-		AVB_LOG_ERROR("Public map data for audio info not allocated.");
-		return;
-	}
+    jack_options_t jackOptions;
+    jack_status_t jackStatus;
+
+    AVB_TRACE_ENTRY(AVB_TRACE_INTF);
+    AVB_LOG_INFO("Call init_jack_client.");
 
 
-	// Give the audio parameters to the mapping module.
-	if (pMediaQ->pMediaQDataFormat) {
-		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
-			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
-			pPubMapUncmpAudioInfo->audioRate = pPvtData->audioRate;
-		}
-	}
+    // Open the pcm device.
+    pPvtData->jack_client_ctx = jack_client_open( pPvtData->pJACKClientName,
+                                                    jackOptions,
+                                                    &jackStatus,
+                                                    pPvtData->pJACKServerName);
+    if( NULL == pPvtData->jack_client_ctx ) {
+        AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
+        AVB_TRACE_EXIT(AVB_TRACE_INTF);
+        return -1;
+    }
+    AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
+    pPvtData->audioRate = (avb_audio_rate_t) jack_get_sample_rate(pPvtData->jack_client_ctx);
+
+
 
 //
 //	AVB_LOG_INFO("Config intf_nv_audio_bits.");
@@ -315,6 +321,25 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 			pPubMapUncmpAudioInfo->audioChannels = pPvtData->audioChannels;
 		}
 	}
+
+
+	media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo;
+	pPubMapUncmpAudioInfo = (media_q_pub_map_uncmp_audio_info_t *)pMediaQ->pPubMapInfo;
+	if (!pPubMapUncmpAudioInfo) {
+		AVB_LOG_ERROR("Public map data for audio info not allocated.");
+		return;
+	}
+
+
+	// Give the audio parameters to the mapping module.
+	if (pMediaQ->pMediaQDataFormat) {
+		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
+			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
+			pPubMapUncmpAudioInfo->audioRate = pPvtData->audioRate;
+		}
+	}
+
+
 
     AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
@@ -637,30 +662,10 @@ extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_int
 		pIntfCB->intf_enable_fixed_timestamp = openavbIntfJACKEnableFixedTimestamp;
 
 
-
-        jack_options_t jackOptions;
-        jack_status_t jackStatus;
-
-        AVB_TRACE_ENTRY(AVB_TRACE_INTF);
-        AVB_LOG_INFO("Call init_jack_client.");
-
-
-        // Open the pcm device.
-        pPvtData->jack_client_ctx = jack_client_open( pPvtData->pJACKClientName,
-                                                        jackOptions,
-                                                        &jackStatus,
-                                                        pPvtData->pJACKServerName);
-        if( NULL == pPvtData->jack_client_ctx ) {
-            AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
-            AVB_TRACE_EXIT(AVB_TRACE_INTF);
-            return -1;
-        }
-        AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
-        pPvtData->audioRate = (avb_audio_rate_t) jack_get_sample_rate(pPvtData->jack_client_ctx);
-
-        pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_24BIT;
-        pPvtData->audioType = AVB_AUDIO_TYPE_UINT;
-        pPvtData->audioChannels = AVB_AUDIO_CHANNELS_2;
+//
+//        pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_24BIT;
+//        pPvtData->audioType = AVB_AUDIO_TYPE_UINT;
+//        pPvtData->audioChannels = AVB_AUDIO_CHANNELS_2;
 
 
 		pPvtData->ignoreTimestamp = FALSE;
