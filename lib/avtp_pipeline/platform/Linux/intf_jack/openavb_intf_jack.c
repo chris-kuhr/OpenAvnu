@@ -230,6 +230,13 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
     jack_options_t jackOptions;
     jack_status_t jackStatus;
 
+
+	pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
+	if (!pPvtData) {
+		AVB_LOG_ERROR("Private interface module data not allocated.");
+		return;
+	}
+
     // Open the pcm device.
     pPvtData->jack_client_ctx = jack_client_open( "AVB_Talker",
                                                     jackOptions,
@@ -253,12 +260,6 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 	AVB_LOG_INFO("Config intf_nv_audio_endian.");
 	pPvtData->audioEndian = AVB_AUDIO_ENDIAN_UNSPEC;
 
-
-	pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
-	if (!pPvtData) {
-		AVB_LOG_ERROR("Private interface module data not allocated.");
-		return;
-	}
 
 
 
