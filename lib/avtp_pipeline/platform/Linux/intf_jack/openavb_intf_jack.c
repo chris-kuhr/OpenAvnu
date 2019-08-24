@@ -188,32 +188,6 @@ int init_jack_client(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_por
 {
     AVB_TRACE_ENTRY(AVB_TRACE_INTF);
 
-    jack_options_t jackOptions;
-    jack_status_t jackStatus;
-
-    // Open the pcm device.
-    pPvtData->jack_client_ctx = jack_client_open( "AVB_Talker",
-                                                    jackOptions,
-                                                    &jackStatus,
-                                                    pPvtData->pJACKServerName);
-    if( NULL == pPvtData->jack_client_ctx ) {
-        AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
-        AVB_TRACE_EXIT(AVB_TRACE_INTF);
-        return -1;
-    }
-    AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
-    pPvtData->audioRate = (avb_audio_rate_t) jack_get_sample_rate(pPvtData->jack_client_ctx);
-
-
-	AVB_LOG_INFO("Config intf_nv_audio_bits.");
-	pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_24BIT;
-	AVB_LOG_INFO("Config intf_nv_audio_channels.");
-	pPvtData->audioChannels = AVB_AUDIO_CHANNELS_2;
-	AVB_LOG_INFO("Config intf_nv_audio_type.");
-	pPvtData->audioType = AVB_AUDIO_TYPE_UINT;
-	AVB_LOG_INFO("Config intf_nv_audio_endian.");
-	pPvtData->audioEndian = AVB_AUDIO_ENDIAN_UNSPEC;
-
 
 
     int nframes = jack_get_buffer_size(pPvtData->jack_client_ctx);
@@ -251,6 +225,34 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 {
     AVB_TRACE_ENTRY(AVB_TRACE_INTF);
     AVB_LOG_INFO("openavbIntfJACKCfgCB called.");
+
+
+    jack_options_t jackOptions;
+    jack_status_t jackStatus;
+
+    // Open the pcm device.
+    pPvtData->jack_client_ctx = jack_client_open( "AVB_Talker",
+                                                    jackOptions,
+                                                    &jackStatus,
+                                                    pPvtData->pJACKServerName);
+    if( NULL == pPvtData->jack_client_ctx ) {
+        AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
+        AVB_TRACE_EXIT(AVB_TRACE_INTF);
+        return -1;
+    }
+    AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
+    pPvtData->audioRate = (avb_audio_rate_t) jack_get_sample_rate(pPvtData->jack_client_ctx);
+
+
+	AVB_LOG_INFO("Config intf_nv_audio_bits.");
+	pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_24BIT;
+	AVB_LOG_INFO("Config intf_nv_audio_channels.");
+	pPvtData->audioChannels = AVB_AUDIO_CHANNELS_2;
+	AVB_LOG_INFO("Config intf_nv_audio_type.");
+	pPvtData->audioType = AVB_AUDIO_TYPE_UINT;
+	AVB_LOG_INFO("Config intf_nv_audio_endian.");
+	pPvtData->audioEndian = AVB_AUDIO_ENDIAN_UNSPEC;
+
 
 	pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
 	if (!pPvtData) {
