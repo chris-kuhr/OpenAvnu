@@ -1,0 +1,32 @@
+\contentsline {chapter}{\numberline {1}Contents}{1}{chapter.1}
+\contentsline {chapter}{\numberline {2}A\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}V\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}TP Interface Module Development}{3}{chapter.2}
+\contentsline {section}{\numberline {2.1}Introduction }{3}{section.2.1}
+\contentsline {section}{\numberline {2.2}The Plug-\/in Architecture }{3}{section.2.2}
+\contentsline {section}{\numberline {2.3}Task / Thread Model }{4}{section.2.3}
+\contentsline {section}{\numberline {2.4}Building an Interface Module }{4}{section.2.4}
+\contentsline {section}{\numberline {2.5}Interface Module in a Talker }{4}{section.2.5}
+\contentsline {section}{\numberline {2.6}Interface Module in a Listener }{5}{section.2.6}
+\contentsline {section}{\numberline {2.7}Working With the Media Queue }{5}{section.2.7}
+\contentsline {section}{\numberline {2.8}Timestamps }{5}{section.2.8}
+\contentsline {chapter}{\numberline {3}A\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}V\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}TP Stream (Talker/\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}Listener) Configuration}{7}{chapter.3}
+\contentsline {section}{\numberline {3.1}Overview }{7}{section.3.1}
+\contentsline {section}{\numberline {3.2}Common Stream Configuration }{9}{section.3.2}
+\contentsline {section}{\numberline {3.3}Example Interface / Mapping Combinations }{11}{section.3.3}
+\contentsline {section}{\numberline {3.4}Interface and Mapping Module Configuration }{11}{section.3.4}
+\contentsline {chapter}{\numberline {4}E\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}A\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}VB Integration Guide}{13}{chapter.4}
+\contentsline {section}{\numberline {4.1}Introduction }{13}{section.4.1}
+\contentsline {section}{\numberline {4.2}A\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}V\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}T\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}P Control }{13}{section.4.2}
+\contentsline {section}{\numberline {4.3}Host Application Integration }{13}{section.4.3}
+\contentsline {chapter}{\numberline {5}Developer Notes}{15}{chapter.5}
+\contentsline {chapter}{\numberline {6}Media Queue Usage}{17}{chapter.6}
+\contentsline {section}{\numberline {6.1}Starting }{18}{section.6.1}
+\contentsline {section}{\numberline {6.2}Talker specific flow }{18}{section.6.2}
+\contentsline {section}{\numberline {6.3}Listener specific flow }{19}{section.6.3}
+\contentsline {section}{\numberline {6.4}Stopping }{19}{section.6.4}
+\contentsline {section}{\numberline {6.5}Guidelines }{19}{section.6.5}
+\contentsline {chapter}{\numberline {7}E\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}A\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}VB S\discretionary {\unhbox \voidb@x \hbox {\relax \fontsize {7}{8}\selectfont $\leftarrow \joinrel \rhook $}}{}{}DK Overview}{21}{chapter.7}
+\contentsline {section}{\numberline {7.1}Introduction }{21}{section.7.1}
+\contentsline {section}{\numberline {7.2}Glossary }{22}{section.7.2}
+\contentsline {section}{\numberline {7.3}Architecture }{23}{section.7.3}
+\contentsline {section}{\numberline {7.4}Integration, Extension and Configuration }{29}{section.7.4}
+\contentsline {section}{\numberline {7.5}Platform Specific Considerations }{30}{section.7.5}

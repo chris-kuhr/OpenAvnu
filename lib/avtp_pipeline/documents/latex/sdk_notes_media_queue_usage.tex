@@ -1,0 +1,90 @@
+\section*{Description}
+
+This section presents the work flow required for working with the Media Queue. Please note that most of the described steps are performed inside the A\+VB stack and are hidden from interface module implemented. There are also some simplifications to make description as straightforward as possible.
+
+~\newline
+
+
+\section*{Workflow}
+
+The following work flow steps will be described.
+\begin{DoxyItemize}
+\item \hyperlink{sdk_notes_media_queue_usage_media_queue_usage_start}{Starting} -\/ Initialization common for talker and listener streams
+\item \hyperlink{sdk_notes_media_queue_usage_media_queue_usage_talker}{Talker specific} -\/ Talker specific usage
+\item \hyperlink{sdk_notes_media_queue_usage_media_queue_usage_listener}{Listener specific} -\/ Listener specific usage
+\item \hyperlink{sdk_notes_media_queue_usage_media_queue_usage_stop}{Stopping} -\/ Stopping procedure common for talker and listener streams
+\item \hyperlink{sdk_notes_media_queue_usage_media_queue_usage_rules}{Rules} -\/ general rules to follow while using the Media Queue
+\end{DoxyItemize}
+
+~\newline
+\hypertarget{sdk_notes_media_queue_usage_media_queue_usage_start}{}\section{Starting }\label{sdk_notes_media_queue_usage_media_queue_usage_start}
+First the Media Queue has to be created and initialized with correct data. Below are the function calls needed for proper creation and initialization. Note\+: these calls are initiated from the A\+V\+TP module.
+
+
+\begin{DoxyItemize}
+\item openavb\+Media\+Q\+Create -\/ data is allocated, queue is initialized, internal data structures are prepared
+\item openavb\+Media\+Q\+Set\+Max\+Stale\+Tail -\/ sets maximum stale in microseconds before data is being purged
+\item The Interface module initialization function for this media queue is called with media queue as a parameter, those functions
+\begin{DoxyItemize}
+\item Set internal interface module parameters
+\item Initialize Media Queue
+\begin{DoxyItemize}
+\item Creates Media Queue Interface Module Private Data
+\item Fills the private data structure with information needed by interface module
+\end{DoxyItemize}
+\end{DoxyItemize}
+\item Stream configuration values are processed. This actually configuration data may come from .ini files or internally set within the A\+VB host application.
+\item Mapping module init function openavb\+\_\+map\+\_\+cb\+\_\+t\+::map\+\_\+gen\+\_\+init\+\_\+cb is being called during which several steps (media queue parameters {\bfseries have to} be set)
+\begin{DoxyItemize}
+\item Media Queue Items count is set
+\item Media Queue Items are allocated
+\end{DoxyItemize}
+\item Interface module init function openavb\+\_\+intf\+\_\+cb\+\_\+t\+::intf\+\_\+gen\+\_\+init\+\_\+cb function is called
+\end{DoxyItemize}
+
+Now the listener/talker stream is running. See next steps below for details of Media Queue interaction for the talker and listener.
+
+~\newline
+\hypertarget{sdk_notes_media_queue_usage_media_queue_usage_talker}{}\section{Talker specific flow  }\label{sdk_notes_media_queue_usage_media_queue_usage_talker}
+As a talker, an interface module is responsible for writing data to Media Queue, so important steps are\+:
+
+
+\begin{DoxyItemize}
+\item openavb\+Media\+Q\+Head\+Lock function for getting the head of the media queue and marking it as locked
+\item openavb\+Media\+Q\+Head\+Unlock function which releases head. Any subsequent calls to openavb\+Media\+Q\+Head\+Lock will return the same Media\+Queue\+Item
+\item openavb\+Media\+Q\+Head\+Push function unlocks head previously taken by the Lock function and informs that work on the current Item is finished so that next call to openavb\+Media\+Q\+Head\+Lock will return next Media Queue Item. Call of this function makes the item accessible via the openavb\+Media\+Q\+Tail\+Lock function. This function additionally unlocks the head so the openavb\+Media\+Q\+Head\+Unlock call is not needed
+\end{DoxyItemize}
+
+~\newline
+\hypertarget{sdk_notes_media_queue_usage_media_queue_usage_listener}{}\section{Listener specific flow    }\label{sdk_notes_media_queue_usage_media_queue_usage_listener}
+As a listener, an interface module works on Media Queue tail elements. Data in those items is being written by the mapping module. These are the key Media Queue functions for the listener functionality in an interface module\+:
+
+
+\begin{DoxyItemize}
+\item openavb\+Media\+Q\+Tail\+Lock gets an item from the tail and allows working on the current tail item of the Media Queue
+\item openavb\+Media\+Q\+Tail\+Unlock unlocks the tail element in Media\+Queue which means that interface module has stopped working on it for now but processing of current tail element will be continued later
+\item openavb\+Media\+Q\+Tail\+Pull unlocks the tail element and removes it from the Media Queue. This means that the interface module has finished processing of current tail element and it can be rewritten again by new data. This function additionally unlocks tail, so it is not necessary to call openavb\+Media\+Q\+Tail\+Unlock.
+\end{DoxyItemize}
+
+~\newline
+\hypertarget{sdk_notes_media_queue_usage_media_queue_usage_stop}{}\section{Stopping     }\label{sdk_notes_media_queue_usage_media_queue_usage_stop}
+During the stopping process following action are taken
+
+
+\begin{DoxyItemize}
+\item openavb\+\_\+intf\+\_\+cb\+\_\+t\+::intf\+\_\+gen\+\_\+end\+\_\+cb is called
+\item openavb\+\_\+map\+\_\+cb\+\_\+t\+::map\+\_\+gen\+\_\+end\+\_\+cb is called
+\item Media Queue is deleted using the openavb\+Media\+Q\+Delete function which frees the memory taken by all internal structures of Media Queue
+\end{DoxyItemize}
+
+~\newline
+\hypertarget{sdk_notes_media_queue_usage_media_queue_usage_rules}{}\section{Guidelines    }\label{sdk_notes_media_queue_usage_media_queue_usage_rules}
+
+\begin{DoxyItemize}
+\item Calls to {\bfseries Lock} functions must always be paired with their {\bfseries Unlock} counterparts to avoid problems while working with Media\+Queue. Push and Pull functions additional result in an unlock.
+\item The current implementation Media Queue allows accessing two elements at the same time -\/ one is head and second the tail
+\item The number of Media Queue items and their sizes depends on configuration for the stream. The main driving factor is to make the data accessible for the next element that follows interface module. The size of the Media Queue item is a factor of the According to this Media Queue number of size of A\+V\+TP stream encapsulation payload multiplied by the packing factor. The number of Media Queue items required if different for a talker and listener. The talker usually needs minimal Media Queue items. However, the listener must have enough Media Queue items to buffer data until the A\+V\+TP presentation time. This is based on the maximum transit time for the SR Class in use. ring decoding
+\item If there are not enough Media Queue items warnings will be logged to the implemented logging system for the port for debugging purposes.
+\end{DoxyItemize}
+
+More implementation details might be find in openavb\+\_\+mediaq\+\_\+pub.\+h 

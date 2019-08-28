@@ -343,7 +343,12 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
     AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
 
-void openavbIntfJACKGenInitCB(media_q_t *pMediaQ){AVB_TRACE_ENTRY(AVB_TRACE_INTF);AVB_LOG_INFO("openavbIntfJACKGenInitCB called.");AVB_TRACE_EXIT(AVB_TRACE_INTF);}
+void openavbIntfJACKGenInitCB(media_q_t *pMediaQ)
+{
+    AVB_TRACE_ENTRY(AVB_TRACE_INTF);
+    AVB_LOG_INFO("openavbIntfJACKGenInitCB called.");
+    AVB_TRACE_EXIT(AVB_TRACE_INTF);
+}
 
 // A call to this callback indicates that this interface module will be
 // a talker. Any talker initialization can be done in this function.
@@ -351,6 +356,7 @@ void openavbIntfJACKTxInitCB(media_q_t *pMediaQ)
 {
 
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
+    AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
 
 	if (pMediaQ) {
 		pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
@@ -374,6 +380,7 @@ bool openavbIntfJACKTxCB(media_q_t *pMediaQ)
 {
 	bool moreItems = TRUE;
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF_DETAIL);
+    AVB_LOG_INFO("\t\t openavbIntfJACKTxCB");
 
 	if (pMediaQ) {
 		media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo = pMediaQ->pPubMapInfo;
@@ -450,6 +457,7 @@ bool openavbIntfJACKTxCB(media_q_t *pMediaQ)
 void openavbIntfJACKRxInitCB(media_q_t *pMediaQ)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
+    AVB_LOG_INFO("\t\t openavbIntfJACKRxInitCB");
 	if (pMediaQ) {
 		pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
 		if (!pPvtData) {
@@ -470,6 +478,7 @@ void openavbIntfJACKRxInitCB(media_q_t *pMediaQ)
 bool openavbIntfJACKRxCB(media_q_t *pMediaQ)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF_DETAIL);
+    AVB_LOG_INFO("\t\t openavbIntfJACKRxCB");
 
 	if (pMediaQ) {
 		media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo = pMediaQ->pPubMapInfo;
@@ -524,6 +533,7 @@ bool openavbIntfJACKRxCB(media_q_t *pMediaQ)
 void openavbIntfJACKEndCB(media_q_t *pMediaQ)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
+    AVB_LOG_INFO("\t\t openavbIntfJACKEndCB");
 	if (pMediaQ) {
 		pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
 		if (!pPvtData) {
@@ -548,12 +558,14 @@ void openavbIntfJACKEndCB(media_q_t *pMediaQ)
 void openavbIntfJACKGenEndCB(media_q_t *pMediaQ)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
+    AVB_LOG_INFO("\t\t openavbIntfJACKGenEndCB");
 	AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
 
 void openavbIntfJACKEnableFixedTimestamp(media_q_t *pMediaQ, bool enabled, U32 transmitInterval, U32 batchFactor)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
+    AVB_LOG_INFO("\t\t openavbIntfJACKEnableFixedTimestamp");
 	if (pMediaQ && pMediaQ->pPvtIntfInfo && pMediaQ->pPubMapInfo) {
 		media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo = pMediaQ->pPubMapInfo;
 		pvt_data_t *pPvtData = (pvt_data_t *)pMediaQ->pPvtIntfInfo;
