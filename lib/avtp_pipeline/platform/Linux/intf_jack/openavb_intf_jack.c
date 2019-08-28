@@ -308,6 +308,14 @@ void openavbIntfJACKGenInitCB(media_q_t *pMediaQ)
 {
     AVB_TRACE_ENTRY(AVB_TRACE_INTF);
     AVB_LOG_INFO("openavbIntfJACKGenInitCB called.");
+
+    /*
+
+
+    init JACK Client here... RxCB and TxCB Init??
+
+
+    */
     AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
 
