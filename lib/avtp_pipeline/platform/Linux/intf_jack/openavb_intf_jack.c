@@ -256,44 +256,49 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
             AVB_TRACE_EXIT(AVB_TRACE_INTF);
             return -1;
         }
+
+        AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
+        pPvtData->audioRate = (avb_audio_rate_t) jack_get_sample_rate(pPvtData->jack_client_ctx);
+
+
+        AVB_LOG_INFO("Config intf_nv_audio_bits.");
+        pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_24BIT;
+        AVB_LOG_INFO("Config intf_nv_audio_channels.");
+        pPvtData->audioChannels = AVB_AUDIO_CHANNELS_2;
+        AVB_LOG_INFO("Config intf_nv_audio_type.");
+        pPvtData->audioType = AVB_AUDIO_TYPE_UINT;
+        AVB_LOG_INFO("Config intf_nv_audio_endian.");
+        pPvtData->audioEndian = AVB_AUDIO_ENDIAN_UNSPEC;
+
+
+
+
+        media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo;
+        pPubMapUncmpAudioInfo = (media_q_pub_map_uncmp_audio_info_t *)pMediaQ->pPubMapInfo;
+        if (!pPubMapUncmpAudioInfo) {
+            AVB_LOG_ERROR("Public map data for audio info not allocated.");
+            return;
+        }
+
+
+        // Give the audio parameters to the mapping module.
+
+        AVB_LOG_INFO("\t\t pMediaQ->pMediaQDataFormat");
+        AVB_LOG_INFO(pMediaQ->pMediaQDataFormat);
+        AVB_LOG_INFO(MapUncmpAudioMediaQDataFormat);
+        AVB_LOG_INFO(MapAVTPAudioMediaQDataFormat);
+
+        if (pMediaQ->pMediaQDataFormat) {
+            if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
+                || strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
+                pPubMapUncmpAudioInfo->audioRate = pPvtData->audioRate;
+                pPubMapUncmpAudioInfo->audioBitDepth = pPvtData->audioBitDepth;
+                pPubMapUncmpAudioInfo->audioType = pPvtData->audioType;
+                pPubMapUncmpAudioInfo->audioEndian = pPvtData->audioEndian;
+                pPubMapUncmpAudioInfo->audioChannels = pPvtData->audioChannels;
+            }
+        }
     }
-    AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
-    pPvtData->audioRate = (avb_audio_rate_t) jack_get_sample_rate(pPvtData->jack_client_ctx);
-
-
-	AVB_LOG_INFO("Config intf_nv_audio_bits.");
-	pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_24BIT;
-	AVB_LOG_INFO("Config intf_nv_audio_channels.");
-	pPvtData->audioChannels = AVB_AUDIO_CHANNELS_2;
-	AVB_LOG_INFO("Config intf_nv_audio_type.");
-	pPvtData->audioType = AVB_AUDIO_TYPE_UINT;
-	AVB_LOG_INFO("Config intf_nv_audio_endian.");
-	pPvtData->audioEndian = AVB_AUDIO_ENDIAN_UNSPEC;
-
-
-
-
-	media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo;
-	pPubMapUncmpAudioInfo = (media_q_pub_map_uncmp_audio_info_t *)pMediaQ->pPubMapInfo;
-	if (!pPubMapUncmpAudioInfo) {
-		AVB_LOG_ERROR("Public map data for audio info not allocated.");
-		return;
-	}
-
-
-	// Give the audio parameters to the mapping module.
-
-    AVB_LOG_INFO("\t\t pMediaQ->pMediaQDataFormat");
-    AVB_LOG_INFO(pMediaQ->pMediaQDataFormat);
-    AVB_LOG_INFO(MapUncmpAudioMediaQDataFormat);
-    AVB_LOG_INFO(MapAVTPAudioMediaQDataFormat);
-
-	if (pMediaQ->pMediaQDataFormat) {
-		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
-			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
-			pPubMapUncmpAudioInfo->audioRate = pPvtData->audioRate;
-		}
-	}
 
 //
 //	AVB_LOG_INFO("Config intf_nv_audio_bits.");
@@ -319,42 +324,6 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 //		}
 //	}
 
-
-
-	// Give the audio parameters to the mapping module.
-	if (pMediaQ->pMediaQDataFormat) {
-		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
-			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
-			pPubMapUncmpAudioInfo->audioBitDepth = pPvtData->audioBitDepth;
-		}
-	}
-
-
-	// Give the audio parameters to the mapping module.
-	if (pMediaQ->pMediaQDataFormat) {
-		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
-			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
-			pPubMapUncmpAudioInfo->audioType = pPvtData->audioType;
-		}
-	}
-
-
-	// Give the audio parameters to the mapping module.
-	if (pMediaQ->pMediaQDataFormat) {
-		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
-			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
-			pPubMapUncmpAudioInfo->audioEndian = pPvtData->audioEndian;
-		}
-	}
-
-
-	// Give the audio parameters to the mapping module.
-	if (pMediaQ->pMediaQDataFormat) {
-		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
-			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
-			pPubMapUncmpAudioInfo->audioChannels = pPvtData->audioChannels;
-		}
-	}
 
     AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
