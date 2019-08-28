@@ -157,7 +157,8 @@ int init_jack_ports(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_port
     char portString[32];
     sprintf( portString, "aaf_ch_%d", channelNumber );
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
-    AVB_LOG_INFO("Init JaCk Ports: %s", portString);
+    AVB_LOG_INFO("Init JaCk Ports:");
+    AVB_LOG_INFO(portString);
 
     pPvtData->jackPorts[ channelNumber ]
             = jack_port_register( pPvtData->jack_client_ctx,
