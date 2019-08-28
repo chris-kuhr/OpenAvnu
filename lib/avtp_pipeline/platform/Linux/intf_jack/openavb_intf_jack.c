@@ -244,15 +244,18 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 		return;
 	}
 
-    // Open the jack client.
-    pPvtData->jack_client_ctx = jack_client_open( "AVB_Talker",
-                                                    jackOptions,
-                                                    &jackStatus,
-                                                    pPvtData->pJACKServerName);
-    if( NULL == pPvtData->jack_client_ctx ) {
-        AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
-        AVB_TRACE_EXIT(AVB_TRACE_INTF);
-        return -1;
+	if( NULL == pPvtData->jack_client_ctx ){
+        // Open the jack client.
+        pPvtData->jack_client_ctx = jack_client_open( "AVB_Talker",
+                                                        jackOptions,
+                                                        &jackStatus,
+                                                        pPvtData->pJACKServerName);
+
+        if( NULL == pPvtData->jack_client_ctx ) {
+            AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
+            AVB_TRACE_EXIT(AVB_TRACE_INTF);
+            return -1;
+        }
     }
     AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
     pPvtData->audioRate = (avb_audio_rate_t) jack_get_sample_rate(pPvtData->jack_client_ctx);
@@ -279,6 +282,12 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 
 
 	// Give the audio parameters to the mapping module.
+
+    AVB_LOG_INFO("\t\t pMediaQ->pMediaQDataFormat");
+    AVB_LOG_INFO(pMediaQ->pMediaQDataFormat);
+    AVB_LOG_INFO(MapUncmpAudioMediaQDataFormat);
+    AVB_LOG_INFO(MapAVTPAudioMediaQDataFormat);
+
 	if (pMediaQ->pMediaQDataFormat) {
 		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
 			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
@@ -669,6 +678,8 @@ extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_int
         AVB_LOG_INFO("register callbacks");
 		pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
 
+
+		pPvtData->jack_client_ctx = NULL;
 
 		pIntfCB->intf_cfg_cb = openavbIntfJACKCfgCB;
 		pIntfCB->intf_gen_init_cb = openavbIntfJACKGenInitCB;
