@@ -96,7 +96,7 @@ typedef struct {
 
 
 	// JACK Client Handle
-    jack_client_t *jack_client_ctx;
+    jack_client_t **jack_client_ctx;
     jack_port_t **jackPorts;
     jack_ringbuffer_t **jackRingBuffer;
 
@@ -159,7 +159,7 @@ int init_jack_ports(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_port
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
 
     pPvtData->jackPorts[ channelNumber ]
-            = jack_port_register( pPvtData->jack_client_ctx,
+            = jack_port_register( (*pPvtData->jack_client_ctx),
                                     portString,
                                     JACK_DEFAULT_AUDIO_TYPE,
                                     tl_jack_port_type, 0 );
@@ -190,10 +190,10 @@ int init_jack_client(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_por
 
 
 
-    int nframes = jack_get_buffer_size(pPvtData->jack_client_ctx);
+    int nframes = jack_get_buffer_size((*pPvtData->jack_client_ctx));
 
-    jack_set_process_callback( pPvtData->jack_client_ctx, jack_process_period_cb, (void*)pPvtData );
-    jack_on_shutdown( pPvtData->jack_client_ctx, jack_shutdown_cb, (void*)pPvtData );
+    jack_set_process_callback( (*pPvtData->jack_client_ctx), jack_process_period_cb, (void*)pPvtData );
+    jack_on_shutdown( (*pPvtData->jack_client_ctx), jack_shutdown_cb, (void*)pPvtData );
 
     pPvtData->jackPorts
             = (jack_port_t**) malloc( sizeof(jack_port_t*) * pPvtData->audioChannels );
@@ -209,7 +209,7 @@ int init_jack_client(pvt_data_t *pPvtData, jack_port_type_constant_t tl_jack_por
         }
     }
 
-    if( jack_activate( pPvtData->jack_client_ctx ) ) {
+    if( jack_activate( (*pPvtData->jack_client_ctx) ) ) {
         AVB_LOG_ERROR("Unable to activate JACK client.");
         AVB_TRACE_EXIT(AVB_TRACE_INTF);
         return -1;
@@ -237,18 +237,19 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 		return;
 	}
 
-    // Open the pcm device.
-    pPvtData->jack_client_ctx = jack_client_open( "AVB_Talker",
+    // Open the jack client.
+    pPvtData->jack_client_ctx = (jack_client_t **)malloc(sizeof(jack_client_t*));
+    (*pPvtData->jack_client_ctx) = jack_client_open( "AVB_Talker",
                                                     jackOptions,
                                                     &jackStatus,
                                                     pPvtData->pJACKServerName);
-    if( NULL == pPvtData->jack_client_ctx ) {
+    if( NULL == (*pPvtData->jack_client_ctx) ) {
         AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
         AVB_TRACE_EXIT(AVB_TRACE_INTF);
         return -1;
     }
     AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
-    pPvtData->audioRate = (avb_audio_rate_t) jack_get_sample_rate(pPvtData->jack_client_ctx);
+    pPvtData->audioRate = (avb_audio_rate_t) jack_get_sample_rate((*pPvtData->jack_client_ctx));
 
 
 	AVB_LOG_INFO("Config intf_nv_audio_bits.");
@@ -356,7 +357,7 @@ void openavbIntfJACKTxInitCB(media_q_t *pMediaQ)
 {
 
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
-    AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
+    AVB_LOG_INFO("\t\t openavbIntfJACKTxInitCB");
 
 	if (pMediaQ) {
 		pvt_data_t *pPvtData = pMediaQ->pPvtIntfInfo;
@@ -372,6 +373,8 @@ void openavbIntfJACKTxInitCB(media_q_t *pMediaQ)
         }
 
 	}
+
+    AVB_LOG_INFO("\t\t openavbIntfJACKTxInitCB Done");
 	AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
 
