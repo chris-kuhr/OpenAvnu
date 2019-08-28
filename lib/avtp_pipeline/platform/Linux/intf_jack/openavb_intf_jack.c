@@ -264,7 +264,7 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
         AVB_LOG_INFO("Config intf_nv_audio_bits.");
         pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_24BIT;
         AVB_LOG_INFO("Config intf_nv_audio_channels.");
-        pPvtData->audioChannels = AVB_AUDIO_CHANNELS_2;
+        pPvtData->audioChannels = AVB_AUDIO_CHANNELS_8;
         AVB_LOG_INFO("Config intf_nv_audio_type.");
         pPvtData->audioType = AVB_AUDIO_TYPE_UINT;
         AVB_LOG_INFO("Config intf_nv_audio_endian.");
@@ -282,12 +282,6 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 
 
         // Give the audio parameters to the mapping module.
-
-        AVB_LOG_INFO("\t\t pMediaQ->pMediaQDataFormat");
-        AVB_LOG_INFO(pMediaQ->pMediaQDataFormat);
-        AVB_LOG_INFO(MapUncmpAudioMediaQDataFormat);
-        AVB_LOG_INFO(MapAVTPAudioMediaQDataFormat);
-
         if (pMediaQ->pMediaQDataFormat) {
             if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
                 || strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
@@ -296,33 +290,15 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
                 pPubMapUncmpAudioInfo->audioType = pPvtData->audioType;
                 pPubMapUncmpAudioInfo->audioEndian = pPvtData->audioEndian;
                 pPubMapUncmpAudioInfo->audioChannels = pPvtData->audioChannels;
+//
+//	AVB_LOG_INFO("Config intf_nv_audio_bits.");
+//	pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_32BIT;
+//	AVB_LOG_INFO("Config intf_nv_audio_type.");
+//	pPvtData->audioType = AVB_AUDIO_TYPE_FLOAT;
             }
         }
     }
 
-//
-//	AVB_LOG_INFO("Config intf_nv_audio_bits.");
-//	pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_32BIT;
-//
-//	// Give the audio parameters to the mapping module.
-//	if (pMediaQ->pMediaQDataFormat) {
-//		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
-//			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
-//			pPubMapUncmpAudioInfo->audioBitDepth = pPvtData->audioBitDepth;
-//		}
-//	}
-//
-//
-//	AVB_LOG_INFO("Config intf_nv_audio_type.");
-//	pPvtData->audioType = AVB_AUDIO_TYPE_FLOAT;
-//
-//	// Give the audio parameters to the mapping module.
-//	if (pMediaQ->pMediaQDataFormat) {
-//		if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
-//			|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
-//			pPubMapUncmpAudioInfo->audioType = pPvtData->audioType;
-//		}
-//	}
 
 
     AVB_TRACE_EXIT(AVB_TRACE_INTF);
@@ -652,19 +628,17 @@ extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_int
 
 		pIntfCB->intf_cfg_cb = openavbIntfJACKCfgCB;
 		pIntfCB->intf_gen_init_cb = openavbIntfJACKGenInitCB;
+
 		pIntfCB->intf_tx_init_cb = openavbIntfJACKTxInitCB;
 		pIntfCB->intf_tx_cb = openavbIntfJACKTxCB;
 		pIntfCB->intf_rx_init_cb = openavbIntfJACKRxInitCB;
 		pIntfCB->intf_rx_cb = openavbIntfJACKRxCB;
+
 		pIntfCB->intf_end_cb = openavbIntfJACKEndCB;
 		pIntfCB->intf_gen_end_cb = openavbIntfJACKGenEndCB;
+
 		pIntfCB->intf_enable_fixed_timestamp = openavbIntfJACKEnableFixedTimestamp;
 
-
-//
-//        pPvtData->audioBitDepth = AVB_AUDIO_BIT_DEPTH_24BIT;
-//        pPvtData->audioType = AVB_AUDIO_TYPE_UINT;
-//        pPvtData->audioChannels = AVB_AUDIO_CHANNELS_2;
 
 
 		pPvtData->ignoreTimestamp = FALSE;
