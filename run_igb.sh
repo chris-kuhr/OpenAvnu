@@ -11,6 +11,6 @@ rmmod igb
 modprobe i2c_algo_bit
 modprobe dca
 modprobe ptp
-insmod /home/christoph/source_code/github-kuhr/OpenAvnu.git/lib/igb_avb/kmod/igb_avb.ko
+insmod /opt/OpenAvnu.git.kuhr/lib/igb_avb/kmod/igb_avb.ko
 
 ethtool -i $1
