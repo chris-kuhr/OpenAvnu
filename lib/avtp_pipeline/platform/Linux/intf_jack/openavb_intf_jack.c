@@ -246,6 +246,7 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 			return;
 		}
 
+        AVB_LOG_INFO("pPubMapUncmpAudioInfo");
 		media_q_pub_map_uncmp_audio_info_t *pPubMapUncmpAudioInfo;
 		pPubMapUncmpAudioInfo = (media_q_pub_map_uncmp_audio_info_t *)pMediaQ->pPubMapInfo;
 		if (!pPubMapUncmpAudioInfo) {
@@ -255,14 +256,17 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 
 
 		if (strcmp(name, "intf_nv_ignore_timestamp") == 0) {
+            AVB_LOG_INFO("intf_nv_ignore_timestamp");
 			tmp = strtol(value, &pEnd, 10);
 			if (*pEnd == '\0' && tmp == 1) {
 				pPvtData->ignoreTimestamp = (tmp == 1);
 			}
+            AVB_LOG_INFO(pPvtData->ignoreTimestamp);
 		}
 
 
 		else if (strcmp(name, "intf_nv_audio_rate") == 0) {
+            AVB_LOG_INFO("intf_nv_audio_rate");
 			val = strtol(value, &pEnd, 10);
 			// TODO: Should check for specific values
 			if (val >= AVB_AUDIO_RATE_8KHZ && val <= AVB_AUDIO_RATE_192KHZ) {
@@ -270,14 +274,14 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 			}
 			else {
 				AVB_LOG_ERROR("Invalid audio rate configured for intf_nv_audio_rate.");
-				pPvtData->audioRate = AVB_AUDIO_RATE_44_1KHZ;
+				pPvtData->audioRate = AVB_AUDIO_RATE_48KHZ;
 			}
             AVB_LOG_INFO(name);
             if( NULL != pPvtData->jack_client_ctx ){
 
                 AVB_LOG_INFO("Query JACK server to config intf_nv_audio_rate.");
                 if( pPvtData->audioRate != (avb_audio_rate_t) jack_get_sample_rate(pPvtData->jack_client_ctx))
-				    AVB_LOG_ERROR("Invalid audio rate configured for intf_nv_audio_rate.");                
+				    AVB_LOG_ERROR("Invalid audio rate configured for intf_nv_audio_rate.");
             }
 
 			// Give the audio parameters to the mapping module.
@@ -289,9 +293,11 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 				//else if (pMediaQ->pMediaQDataFormat == MapSAFMediaQDataFormat) {
 				//}
 			}
+            AVB_LOG_INFO(pPubMapUncmpAudioInfo->audioRate);
 		}
 
 		else if (strcmp(name, "intf_nv_audio_bit_depth") == 0) {
+            AVB_LOG_INFO("intf_nv_audio_bit_depth");
 			val = strtol(value, &pEnd, 10);
 			// TODO: Should check for specific values
 			if (val >= AVB_AUDIO_BIT_DEPTH_1BIT && val <= AVB_AUDIO_BIT_DEPTH_64BIT) {
@@ -311,9 +317,11 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 				//else if (pMediaQ->pMediaQDataFormat == MapSAFMediaQDataFormat) {
 				//}
 			}
+            AVB_LOG_INFO(pPubMapUncmpAudioInfo->audioBitDepth);
 		}
 
 		else if (strcmp(name, "intf_nv_audio_type") == 0) {
+            AVB_LOG_INFO("intf_nv_audio_type");
 			if (strncasecmp(value, "float", 5) == 0)
 				pPvtData->audioType = AVB_AUDIO_TYPE_FLOAT;
 			else if (strncasecmp(value, "sign", 4) == 0
@@ -336,9 +344,11 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 				//else if (pMediaQ->pMediaQDataFormat == MapSAFMediaQDataFormat) {
 				//}
 			}
+            AVB_LOG_INFO(pPubMapUncmpAudioInfo->audioType);
 		}
 
 		else if (strcmp(name, "intf_nv_audio_endian") == 0) {
+            AVB_LOG_INFO("intf_nv_audio_endian");
 			if (strncasecmp(value, "big", 3) == 0)
 				pPvtData->audioEndian = AVB_AUDIO_ENDIAN_BIG;
 			else if (strncasecmp(value, "little", 6) == 0)
@@ -357,9 +367,11 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 				//else if (pMediaQ->pMediaQDataFormat == MapSAFMediaQDataFormat) {
 				//}
 			}
+            AVB_LOG_INFO(pPvtData->audioEndian);
 		}
 
 		else if (strcmp(name, "intf_nv_audio_channels") == 0) {
+            AVB_LOG_INFO("intf_nv_audio_channels");
 			val = strtol(value, &pEnd, 10);
 			// TODO: Should check for specific values
 			if (val >= AVB_AUDIO_CHANNELS_1 && val <= AVB_AUDIO_CHANNELS_8) {
@@ -371,6 +383,7 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 			}
 
 			// Give the audio parameters to the mapping module.
+            AVB_LOG_INFO("pPubMapUncmpAudioInfo->audioChannels");
 			if (pMediaQ->pMediaQDataFormat) {
 				if (strcmp(pMediaQ->pMediaQDataFormat, MapUncmpAudioMediaQDataFormat) == 0
 					|| strcmp(pMediaQ->pMediaQDataFormat, MapAVTPAudioMediaQDataFormat) == 0) {
@@ -379,18 +392,22 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 				//else if (pMediaQ->pMediaQDataFormat == MapSAFMediaQDataFormat) {
 				//}
 			}
+            AVB_LOG_INFO(pPubMapUncmpAudioInfo->audioChannels);
 
 		}
 
         if (strcmp(name, "intf_nv_start_threshold_periods") == 0) {
+            AVB_LOG_INFO("intf_nv_start_threshold_periods");
 			pPvtData->startThresholdPeriods = strtol(value, &pEnd, 10);
 		}
 
 		else if (strcmp(name, "intf_nv_period_time") == 0) {
+            AVB_LOG_INFO("intf_nv_period_time");
 			pPvtData->periodTimeUsec = strtol(value, &pEnd, 10);
 		}
 
 		else if (strcmp(name, "intf_nv_clock_skew_ppb") == 0) {
+            AVB_LOG_INFO("intf_nv_clock_skew_ppb");
 			pPvtData->clockSkewPPB = strtol(value, &pEnd, 10);
 		}
 
