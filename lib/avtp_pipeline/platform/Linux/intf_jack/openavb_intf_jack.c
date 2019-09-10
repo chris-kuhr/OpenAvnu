@@ -771,14 +771,16 @@ extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_int
 		pPvtData->fixedTimestampEnabled = FALSE;
 		pPvtData->clockSkewPPB = 0;
 
-        jack_options_t jackOptions;
+        jack_options_t jackOptions = JackNoStartServer;
         jack_status_t jackStatus;
 
         // Open the jack client.
+        AVB_LOG_INFO("jack_client_open");
         pPvtData->jack_client_ctx = jack_client_open( "AVB_Client",
                                                         jackOptions,
                                                         &jackStatus,
                                                         NULL);
+        AVB_LOG_INFO("jack_client_open done");
 
         if( NULL == pPvtData->jack_client_ctx ) {
             AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
