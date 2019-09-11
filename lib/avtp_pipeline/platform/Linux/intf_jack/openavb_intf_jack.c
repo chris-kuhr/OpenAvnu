@@ -430,6 +430,18 @@ void openavbIntfJACKGenInitCB(media_q_t *pMediaQ)
 
 
     */
+    jack_options_t jackOptions = JackNoStartServer;
+    jack_status_t jackStatus;
+    char *server_name = NULL;
+
+    // Open the jack client.
+    AVB_LOG_INFO("jack_client_open");
+    if( 0 == ( pPvtData->jack_client_ctx = jack_client_open( "AVB_Client", jackOptions, &jackStatus, server_name))) {
+        AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
+        AVB_TRACE_EXIT(AVB_TRACE_INTF);
+        return -1;
+    }
+    AVB_LOG_INFO("jack_client_open_done");
     AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
 
@@ -629,13 +641,6 @@ void openavbIntfJACKEndCB(media_q_t *pMediaQ)
         for( int k=0; k<pPvtData->audioChannels; k++){
             if( jack_port_unregister(pPvtData->jack_client_ctx, pPvtData->jackPorts[ k ]));
         }
-
-        jack_client_close(pPvtData->jack_client_ctx);
-
-        for( int k=0; k<pPvtData->audioChannels; k++){
-            jack_free( pPvtData->jackPorts[ k ] );
-            jack_ringbuffer_free( pPvtData->jackRingBuffer[ k ] );
-        }
     }
 	AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
@@ -644,6 +649,13 @@ void openavbIntfJACKGenEndCB(media_q_t *pMediaQ)
 {
 	AVB_TRACE_ENTRY(AVB_TRACE_INTF);
     AVB_LOG_INFO("\t\t openavbIntfJACKGenEndCB");
+
+    jack_client_close(pPvtData->jack_client_ctx);
+
+    for( int k=0; k<pPvtData->audioChannels; k++){
+        jack_free( pPvtData->jackPorts[ k ] );
+        jack_ringbuffer_free( pPvtData->jackRingBuffer[ k ] );
+    }
 	AVB_TRACE_EXIT(AVB_TRACE_INTF);
 }
 
@@ -771,18 +783,6 @@ extern DLL_EXPORT bool openavbIntfJACKInitialize(media_q_t *pMediaQ, openavb_int
 		pPvtData->fixedTimestampEnabled = FALSE;
 		pPvtData->clockSkewPPB = 0;
 
-        jack_options_t jackOptions = JackNoStartServer;
-        jack_status_t jackStatus;
-        char *server_name = NULL;
-
-        // Open the jack client.
-        AVB_LOG_INFO("jack_client_open");
-        if( 0 == ( pPvtData->jack_client_ctx = jack_client_open( "AVB_Client", jackOptions, &jackStatus, server_name))) {
-            AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
-            AVB_TRACE_EXIT(AVB_TRACE_INTF);
-            return -1;
-        }
-        AVB_LOG_INFO("jack_client_open_done");
 
 	}
 
