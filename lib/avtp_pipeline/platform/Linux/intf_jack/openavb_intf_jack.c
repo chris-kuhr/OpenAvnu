@@ -235,6 +235,9 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
     AVB_LOG_INFO(name);
     AVB_LOG_INFO(value);
 
+
+
+
 	if (pMediaQ) {
 		char *pEnd;
 		long tmp;
@@ -244,6 +247,28 @@ void openavbIntfJACKCfgCB(media_q_t *pMediaQ, const char *name, const char *valu
 		if (!pPvtData) {
 			AVB_LOG_ERROR("Private interface module data not allocated.");
 			return;
+		}
+
+		if( pPvtData->jack_client_ctx == NULL ){
+            /*
+
+
+            init JACK Client here... RxCB and TxCB Init??
+
+
+            */
+            jack_options_t jackOptions = JackNoStartServer;
+            jack_status_t jackStatus;
+            char *server_name = NULL;
+
+            // Open the jack client.
+            AVB_LOG_INFO("jack_client_open");
+            if( 0 == ( pPvtData->jack_client_ctx = jack_client_open( "AVB_Client", jackOptions, &jackStatus, server_name))) {
+                AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
+                AVB_TRACE_EXIT(AVB_TRACE_INTF);
+                return -1;
+            }
+            AVB_LOG_INFO("jack_client_open_done");
 		}
 
         AVB_LOG_INFO("pPubMapUncmpAudioInfo");
@@ -429,25 +454,6 @@ void openavbIntfJACKGenInitCB(media_q_t *pMediaQ)
 			AVB_LOG_ERROR("Private interface module data not allocated.");
 			return;
 		}
-        /*
-
-
-        init JACK Client here... RxCB and TxCB Init??
-
-
-        */
-        jack_options_t jackOptions = JackNoStartServer;
-        jack_status_t jackStatus;
-        char *server_name = NULL;
-
-        // Open the jack client.
-        AVB_LOG_INFO("jack_client_open");
-        if( 0 == ( pPvtData->jack_client_ctx = jack_client_open( "AVB_Client", jackOptions, &jackStatus, server_name))) {
-            AVB_LOGF_ERROR("Unable to connect to JACK server; jack_client_open() failed, status = 0x%2.0x.", jackStatus);
-            AVB_TRACE_EXIT(AVB_TRACE_INTF);
-            return -1;
-        }
-        AVB_LOG_INFO("jack_client_open_done");
 
     }
     AVB_TRACE_EXIT(AVB_TRACE_INTF);
