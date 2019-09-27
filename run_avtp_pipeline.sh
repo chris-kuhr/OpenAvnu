@@ -17,10 +17,8 @@ scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 pushd .
 cd $scriptdir/lib/avtp_pipeline/build/bin
-./openavb_avdecc -I pcap:$nic jack_talker.ini & 
-#jack_listener.ini &
+./openavb_avdecc -I pcap:$nic $scriptdir/jack_talker.ini $scriptdir/jack_listener.ini &
 sleep 5
-./openavb_host -I pcap:$nic jack_talker.ini & 
-#jack_listener.ini &
+./openavb_host -I pcap:$nic $scriptdir/jack_talker.ini $scriptdir/jack_listener.ini &
 popd
 
