@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
 	char* dev = NULL;
 	char errbuf[PCAP_ERRBUF_SIZE];
 	struct bpf_program comp_filter_exp;		/** The compiled filter expression */
-	char filter_exp[100];	/** The filter expression */
+	char filter_exp[100];	                /** The filter expression */
 	int rc;
 	struct mrp_listener_ctx *ctx = malloc(sizeof(struct mrp_listener_ctx));
 	struct mrp_domain_attr *class_a = malloc(sizeof(struct mrp_domain_attr));
@@ -317,7 +317,7 @@ int main(int argc, char *argv[])
 	int dstEndpointId = -1;
 
 	int c;
-	while((c = getopt(argc, argv, "hise:")) > 0)
+	while((c = getopt(argc, argv, "hi:")) > 0)
 	{
 		switch (c)
 		{
