@@ -29,13 +29,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <pcap/pcap.h>
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
-#include <sndfile.h>
 
 #include "listener_mrp_client.h"
 
-#define LIBSND 1
 
-#define VERSION_STR "1.0"
+#define VERSION_STR "1.1"
 
 #define ETHERNET_HEADER_SIZE (18)
 #define SEVENTEEN22_HEADER_PART1_SIZE (4)
@@ -54,6 +52,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define DEFAULT_RINGBUFFER_SIZE (32768)
 #define MAX_SAMPLE_VALUE ((1U << ((sizeof(int32_t) * 8) -1)) -1)
 
+
+#define TOTAL_SAMPLESIZE_PER_FRAME  (SAMPLE_SIZE * SAMPLES_PER_FRAME)
+#define TOTAL_SAMPLE_CNT_PER_FRAME  (SAMPLES_PER_FRAME * CHANNELS)
+#define BUF_LVL                     (SAMPLE_SIZE * SAMPLES_PER_FRAME * DEFAULT_RINGBUFFER_SIZE)
+#define BUFPRELOAD_LVL              (BUF_LVL/4)
 struct mrp_listener_ctx *ctx_sig;//Context pointer for signal handler
 
 struct ethernet_header{
@@ -66,14 +69,15 @@ struct ethernet_header{
 /* globals */
 
 static const char *version_str = "jack_listener v" VERSION_STR "\n"
-    "Copyright (c) 2013, Katja Rohloff\n";
+    "Copyright (c) 2013, Katja Rohloff, Copyright (c) 2019, Christoph Kuhr\n";
 
 pcap_t* handle;
 u_char glob_ether_type[] = { 0x22, 0xf0 };
-SNDFILE* snd_file;
 static jack_port_t** outputports;
 static jack_default_audio_sample_t** out;
-jack_ringbuffer_t* ringbuffer;
+jack_ringbuffer_t* ringbuffer[CHANNELS];
+uint32_t frame[TOTAL_SAMPLE_CNT_PER_FRAME];
+jack_default_audio_sample_t jackframe[TOTAL_SAMPLE_CNT_PER_FRAME];
 jack_client_t* client;
 volatile int ready = 0;
 
@@ -114,17 +118,11 @@ void shutdown_and_exit(int sig)
 		pcap_close(handle);
 	}
 
-#if LIBSND
-	if (NULL != snd_file) {
-		sf_write_sync(snd_file);
-		sf_close(snd_file);
-	}
-#endif /* LIBSND */
-
 	if (NULL != client) {
 		fprintf(stdout, "jack\n");
 		jack_client_close(client);
-		jack_ringbuffer_free(ringbuffer);
+		for(int i= 0; i< CHANNELS; i++)
+            jack_ringbuffer_free(ringbuffer[i]);
 	}
 
 	if (sig != 0)
@@ -138,8 +136,6 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 	unsigned char* test_stream_id;
 	struct ethernet_header* eth_header;
 	uint32_t* mybuf;
-	uint32_t frame[CHANNELS];
-	jack_default_audio_sample_t jackframe[CHANNELS];
 	int cnt;
 	static int total;
 	struct mrp_listener_ctx *ctx = (struct mrp_listener_ctx*) args;
@@ -158,36 +154,34 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 
 	mybuf = (uint32_t*) (packet + HEADER_SIZE);
 
-	for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {
-
-		memcpy(&frame[0], &mybuf[i], sizeof(frame));
-
+	for(int i = 0; i < TOTAL_SAMPLE_CNT_PER_FRAME; i+=CHANNELS) {
 		for(int j = 0; j < CHANNELS; j++) {
+            memcpy(&frame[i + j], &mybuf[i + j], sizeof(frame));
 
-			frame[j] = ntohl(frame[j]);   /* convert to host-byte order */
-			frame[j] &= 0x00ffffff;       /* ignore leading label */
-			frame[j] <<= 8;               /* left-align remaining PCM-24 sample */
+			uint32_t channel = ntohl(frame[i + j]);   /* convert to host-byte order */
+			channel &= 0x00ffffff;       /* ignore leading label */
+			channel <<= 8;               /* left-align remaining PCM-24 sample */
 
-			jackframe[j] = ((int32_t)frame[j])/(float)(MAX_SAMPLE_VALUE);
+			jackframe[i + j*SAMPLES_PER_FRAME] = ((int32_t)channel)/(float)(MAX_SAMPLE_VALUE);
 		}
+    }
 
-		if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
-			jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
 
-		} else {
-			fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
-		}
+    for(int j = 0; j < CHANNELS; j++) {
+        if ((cnt = jack_ringbuffer_write_space(ringbuffer[j])) >= TOTAL_SAMPLESIZE_PER_FRAME) {
+            jack_ringbuffer_write(ringbuffer[j], (void*)&jackframe[j*SAMPLES_PER_FRAME], TOTAL_SAMPLESIZE_PER_FRAME);
+            total += CHANNELS;
 
-		if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
-			/** Ringbuffer has only 25% or less write space available, it's time to tell jackd
-			to read some data. */
-			ready = 1;
-		}
+        } else {
+            fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
+        }
 
-#if LIBSND
-		sf_writef_float(snd_file, jackframe, 1);
-#endif /* LIBSND */
-	}
+        if (jack_ringbuffer_write_space(ringbuffer[j]) <= BUFPRELOAD_LVL) {
+            /** Ringbuffer has only 25% or less write space available, it's time to tell jackd
+            to read some data. */
+            ready = 1;
+        }
+    }
 }
 
 static int process_jack(jack_nframes_t nframes, void* arg)
@@ -202,13 +196,11 @@ static int process_jack(jack_nframes_t nframes, void* arg)
 		out[i] = jack_port_get_buffer(outputports[i], nframes);
 	}
 
-	for(size_t i = 0; i < nframes; i++) {
+	for(int i = 0; i < CHANNELS; i++) {
 
-		if (jack_ringbuffer_read_space(ringbuffer) >= SAMPLE_SIZE * CHANNELS) {
+		if (jack_ringbuffer_read_space(ringbuffer[i]) >= SAMPLE_SIZE * nframes) {
 
-			for(int j = 0; j < CHANNELS; j++){
-				jack_ringbuffer_read (ringbuffer, (char*)(out[j]+i), SAMPLE_SIZE);
-			}
+            jack_ringbuffer_read (ringbuffer[i], (char*)(out[i]), SAMPLE_SIZE * nframes);
 
 		} else {
 			printf ("underrun\n");
@@ -256,14 +248,19 @@ jack_client_t* init_jack(struct mrp_listener_ctx *ctx)
 	jack_on_shutdown(client, jack_shutdown, (void *)ctx);
 
 	outputports = (jack_port_t**) malloc (CHANNELS * sizeof (jack_port_t*));
-	out = (jack_default_audio_sample_t**) malloc (CHANNELS * sizeof (jack_default_audio_sample_t*));
-	ringbuffer = jack_ringbuffer_create (SAMPLE_SIZE * DEFAULT_RINGBUFFER_SIZE * CHANNELS);
-	jack_ringbuffer_mlock(ringbuffer);
+	int nframes = jack_get_buffer_size(client);
+	int mallocSize = CHANNELS * nframes * sizeof (jack_default_audio_sample_t*);
 
-	memset(out, 0, sizeof (jack_default_audio_sample_t*)*CHANNELS);
-	memset(ringbuffer->buf, 0, ringbuffer->size);
+	out = (jack_default_audio_sample_t**) malloc (mallocSize);
 
 	for(int i = 0; i < CHANNELS; i++) {
+
+        ringbuffer[i] = jack_ringbuffer_create (BUF_LVL);
+        jack_ringbuffer_mlock(ringbuffer[i]);
+
+        memset(out, 0, mallocSize );
+        memset(ringbuffer[i]->buf, 0, ringbuffer[i]->size);
+
 
 		char* portName;
 		if (asprintf(&portName, "output%d", i) < 0) {
@@ -316,8 +313,11 @@ int main(int argc, char *argv[])
 	ctx_sig = ctx;
 	signal(SIGINT, shutdown_and_exit);
 
+	int dstStreamUId = -1;
+	int dstEndpointId = -1;
+
 	int c;
-	while((c = getopt(argc, argv, "hi:")) > 0)
+	while((c = getopt(argc, argv, "hise:")) > 0)
 	{
 		switch (c)
 		{
@@ -327,12 +327,18 @@ int main(int argc, char *argv[])
 		case 'i':
 			dev = strdup(optarg);
 			break;
+		case 's':
+			dstStreamUId = atoi(optarg);
+			break;
+		case 'e':
+			dstEndpointId = atoi(optarg);
+			break;
 		default:
           		fprintf(stderr, "Unrecognized option!\n");
 		}
 	}
 
-	if (NULL == dev) {
+	if (NULL == dev || -1 == dstStreamUId || -1 == dstEndpointId) {
 		help();
 	}
 
@@ -385,27 +391,6 @@ int main(int argc, char *argv[])
 		printf("send_ready failed\n");
 		return EXIT_FAILURE;
 	}
-
-#if LIBSND
-	char* filename = "listener.wav";
-	SF_INFO* sf_info = (SF_INFO*)malloc(sizeof(SF_INFO));
-
-	memset(sf_info, 0, sizeof(SF_INFO));
-
-	sf_info->samplerate = SAMPLES_PER_SECOND;
-	sf_info->channels = CHANNELS;
-	sf_info->format = SF_FORMAT_WAV | SF_FORMAT_PCM_24;
-
-	if (0 == sf_format_check(sf_info)) {
-		fprintf(stderr, "Wrong format.\n");
-		shutdown_and_exit(0);
-	}
-
-	if (NULL == (snd_file = sf_open(filename, SFM_WRITE, sf_info))) {
-		fprintf(stderr, "Could not create file %s.\n", filename);
-		shutdown_and_exit(0);
-	}
-#endif /* LIBSND */
 
 	/** session, get session handler */
 	handle = pcap_open_live(dev, BUFSIZ, 1, -1, errbuf);
