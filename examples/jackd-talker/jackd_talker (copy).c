@@ -144,7 +144,8 @@ static void* packetizer_thread(void *arg) {
 	int i;
 	(void) arg; /* unused */
 
-	const size_t bytes_to_read = CHANNELS * SAMPLES_PER_FRAME * SAMPLE_SIZE;
+	const size_t bytes_to_read = CHANNELS * SAMPLES_PER_FRAME *
+		SAMPLE_SIZE;
 	jack_default_audio_sample_t* framebuf = malloc (bytes_to_read);
 	extern jack_ringbuffer_t* ringbuffer;
 	extern pthread_mutex_t threadLock;
@@ -448,7 +449,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	if( igb_get_wallclock( &glob_igb_dev, &now_local, NULL ) == 0 ) {
+	if( igb_get_wallclock( &glob_igb_dev, &now_local, NULL ) != 0 ) {
 	  fprintf( stderr, "Failed to get wallclock time\n" );
 	  return EXIT_FAILURE;
 	}
