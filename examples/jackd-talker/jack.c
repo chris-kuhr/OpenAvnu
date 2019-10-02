@@ -84,7 +84,7 @@ jack_client_t* init_jack(struct mrp_talker_ctx *ctx)
 {
 	jack_client_t *client;
 	const char *client_name = "simple_talker";
-	const char *server_name = NULL;
+	const char *server_name = "AVB_Processing";
 	jack_options_t options = JackNullOption;
 	jack_status_t status;
 

@@ -228,7 +228,7 @@ void jack_shutdown(void* arg)
 jack_client_t* init_jack(struct mrp_listener_ctx *ctx)
 {
 	const char* client_name = "simple_listener";
-	const char* server_name = NULL;
+	const char* server_name = "AVB_Processing";
 	jack_options_t options = JackNullOption;
 	jack_status_t status;
 
