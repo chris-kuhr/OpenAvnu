@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
 
 
 	int c;
-	while((c = getopt(argc, argv, "hi:s:e")) > 0)	{
+	while((c = getopt(argc, argv, "hi:s:e:")) > 0)	{
 		switch (c)		{
             case 'h':
                 help();
