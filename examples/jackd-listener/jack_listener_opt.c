@@ -173,7 +173,7 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
             total += CHANNELS;
 
         } else {
-            fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
+            #fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
         }
 
         if (jack_ringbuffer_write_space(ringbuffer[i]) <= BUFPRELOAD_LVL) {
@@ -280,21 +280,6 @@ jack_client_t* init_jack(struct mrp_listener_ctx *ctx)
 		fprintf (stderr, "cannot activate client\n");
 		shutdown_and_exit(0);
 	}
-
-	ports = jack_get_ports(client, NULL, NULL, JackPortIsPhysical|JackPortIsInput);
-	if(NULL == ports) {
-		fprintf (stderr, "no physical playback ports\n");
-		shutdown_and_exit(0);
-	}
-
-	int i = 0;
-	while(i < CHANNELS && NULL != ports[i]) {
-		if (jack_connect(client, jack_port_name(outputports[i]), ports[i]))
-			fprintf (stderr, "cannot connect output ports\n");
-		i++;
-	}
-
-	free(ports);
 
 	return client;
 }
