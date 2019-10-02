@@ -173,7 +173,7 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
             total += CHANNELS;
 
         } else {
-            #fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
+            //fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
         }
 
         if (jack_ringbuffer_write_space(ringbuffer[i]) <= BUFPRELOAD_LVL) {
