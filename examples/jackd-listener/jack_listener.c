@@ -114,12 +114,6 @@ void shutdown_and_exit(int sig)
 		pcap_close(handle);
 	}
 
-#if LIBSND
-	if (NULL != snd_file) {
-		sf_write_sync(snd_file);
-		sf_close(snd_file);
-	}
-#endif /* LIBSND */
 
 	if (NULL != client) {
 		fprintf(stdout, "jack\n");
@@ -173,9 +167,8 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 
 		if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
 			jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
-
 		} else {
-			fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
+			//fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
 		}
 
 		if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
@@ -184,9 +177,6 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 			ready = 1;
 		}
 
-#if LIBSND
-		sf_writef_float(snd_file, jackframe, 1);
-#endif /* LIBSND */
 	}
 }
 
@@ -211,7 +201,7 @@ static int process_jack(jack_nframes_t nframes, void* arg)
 			}
 
 		} else {
-			printf ("underrun\n");
+			//printf ("underrun\n");
 			ready = 0;
 
 			return 0;
@@ -283,21 +273,21 @@ jack_client_t* init_jack(struct mrp_listener_ctx *ctx)
 		fprintf (stderr, "cannot activate client\n");
 		shutdown_and_exit(0);
 	}
-
-	ports = jack_get_ports(client, NULL, NULL, JackPortIsPhysical|JackPortIsInput);
-	if(NULL == ports) {
-		fprintf (stderr, "no physical playback ports\n");
-		shutdown_and_exit(0);
-	}
-
-	int i = 0;
-	while(i < CHANNELS && NULL != ports[i]) {
-		if (jack_connect(client, jack_port_name(outputports[i]), ports[i]))
-			fprintf (stderr, "cannot connect output ports\n");
-		i++;
-	}
-
-	free(ports);
+//
+//	ports = jack_get_ports(client, "meter:in", NULL, JackPortIsInput);
+//	if(NULL == ports) {
+//		fprintf (stderr, "no physical playback ports\n");
+//		shutdown_and_exit(0);
+//	}
+//
+//	int i = 0;
+//	while(i < CHANNELS && NULL != ports[i]) {
+//		if (jack_connect(client, jack_port_name(outputports[i]), ports[i]))
+//			fprintf (stderr, "cannot connect output ports\n");
+//		i++;
+//	}
+//
+//	free(ports);
 
 	return client;
 }
@@ -386,26 +376,6 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-#if LIBSND
-	char* filename = "listener.wav";
-	SF_INFO* sf_info = (SF_INFO*)malloc(sizeof(SF_INFO));
-
-	memset(sf_info, 0, sizeof(SF_INFO));
-
-	sf_info->samplerate = SAMPLES_PER_SECOND;
-	sf_info->channels = CHANNELS;
-	sf_info->format = SF_FORMAT_WAV | SF_FORMAT_PCM_24;
-
-	if (0 == sf_format_check(sf_info)) {
-		fprintf(stderr, "Wrong format.\n");
-		shutdown_and_exit(0);
-	}
-
-	if (NULL == (snd_file = sf_open(filename, SFM_WRITE, sf_info))) {
-		fprintf(stderr, "Could not create file %s.\n", filename);
-		shutdown_and_exit(0);
-	}
-#endif /* LIBSND */
 
 	/** session, get session handler */
 	handle = pcap_open_live(dev, BUFSIZ, 1, -1, errbuf);
