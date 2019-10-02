@@ -251,12 +251,14 @@ int main(int argc, char *argv[])
 	uint64_t update_8021as;
 	unsigned delta_8021as, delta_local;
 	jack_client_t* _jackclient;
+	int dstStreamUId = -1;
+	int dstEndpointId = -1;
 	struct mrp_talker_ctx *ctx = malloc(sizeof(struct mrp_talker_ctx));
 	struct mrp_domain_attr *class_a = malloc(sizeof(struct mrp_domain_attr));
 	struct mrp_domain_attr *class_b = malloc(sizeof(struct mrp_domain_attr));
 
 	for (;;) {
-		c = getopt(argc, argv, "hi:");
+		c = getopt(argc, argv, "hi:s:e:");
 		if (c < 0)
 			break;
 		switch (c) {
@@ -271,19 +273,48 @@ int main(int argc, char *argv[])
 			}
 			interface = strdup(optarg);
 			break;
+        case 's':
+            dstStreamUId = atoi(optarg);
+            break;
+        case 'e':
+            dstEndpointId = atoi(optarg);
+            break;
 		}
 	}
 	if (optind < argc)
 		usage();
-	if (NULL == interface) {
+	if (NULL == interface || -1 == dstStreamUId || -1 == dstEndpointId) {
 		usage();
 	}
+
+
 	rc = mrp_talker_client_init(ctx);
 	if (rc) {
 		printf("MRP talker client initialization failed\n");
 		return errno;
 	}
 	halt_tx_sig = &ctx->halt_tx;
+
+	/*
+        Set Dest MAC
+	*/
+
+	glob_dest_addr[4] = dstStreamUId;
+	glob_dest_addr[5] = dstEndpointId;
+
+	glob_station_addr[4] = dstStreamUId;
+	glob_station_addr[5] = dstEndpointId;
+
+	memset(glob_stream_id, 0, sizeof(glob_stream_id));
+	memcpy(glob_stream_id, glob_station_addr, sizeof(glob_station_addr));
+	memcpy(ctx->monitor_stream_id, glob_stream_id, sizeof(glob_stream_id));
+
+	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x",
+                                     ctx->stream_id[0], ctx->stream_id[1],
+                                     ctx->stream_id[2], ctx->stream_id[3],
+                                     ctx->stream_id[4], ctx->stream_id[5],
+                                     ctx->stream_id[6], ctx->stream_id[7]);
+
 
 	rc = mrp_connect(ctx);
 	if (rc) {
@@ -337,8 +368,6 @@ int main(int argc, char *argv[])
 	igb_set_class_bandwidth(&glob_igb_dev, PACKET_IPG / 125000, 0, PKT_SZ - 22,
 				0);
 
-	memset(glob_stream_id, 0, sizeof(glob_stream_id));
-	memcpy(glob_stream_id, glob_station_addr, sizeof(glob_station_addr));
 
 	a_packet.dmatime = a_packet.attime = a_packet.flags = 0;
 	a_packet.map.paddr = a_page.dma_paddr;

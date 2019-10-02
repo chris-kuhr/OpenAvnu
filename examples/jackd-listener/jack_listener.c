@@ -80,6 +80,10 @@ uint32_t frame[TOTAL_SAMPLE_CNT_PER_FRAME];
 jack_default_audio_sample_t jackframe[TOTAL_SAMPLE_CNT_PER_FRAME];
 jack_client_t* client;
 volatile int ready = 0;
+unsigned char glob_station_addr[] = { 0, 0, 0, 0, 0, 0 };
+unsigned char glob_stream_id[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+/* IEEE 1722 reserved address */
+unsigned char glob_dest_addr[] = { 0x91, 0xE0, 0xF0, 0x00, 0x0e, 0x80 };
 
 static void help()
 {
@@ -331,6 +335,27 @@ int main(int argc, char *argv[])
 		printf("failed to initialize global variables\n");
 		return EXIT_FAILURE;
 	}
+
+
+	/*
+        Set Dest MAC
+	*/
+
+	glob_dest_addr[4] = dstStreamUId;
+	glob_dest_addr[5] = dstEndpointId;
+
+	glob_station_addr[4] = dstStreamUId;
+	glob_station_addr[5] = dstEndpointId;
+
+	memset(glob_stream_id, 0, sizeof(glob_stream_id));
+	memcpy(glob_stream_id, glob_station_addr, sizeof(glob_station_addr));
+	memcpy(ctx->monitor_stream_id, glob_stream_id, sizeof(glob_stream_id));
+
+	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x",
+                                     ctx->stream_id[0], ctx->stream_id[1],
+                                     ctx->stream_id[2], ctx->stream_id[3],
+                                     ctx->stream_id[4], ctx->stream_id[5],
+                                     ctx->stream_id[6], ctx->stream_id[7]);
 
 	if (create_socket(ctx)) {
 		fprintf(stderr, "Socket creation failed.\n");
