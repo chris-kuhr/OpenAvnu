@@ -66,6 +66,7 @@ struct mrp_talker_ctx
 	u_int16_t domain_class_b_vid;
 	unsigned char monitor_stream_id[8];
 	volatile int listeners;
+	int state;
 };
 /*
 struct mrp_domain_attr

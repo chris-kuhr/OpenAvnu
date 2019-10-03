@@ -51,7 +51,7 @@ static int process(jack_nframes_t nframes, void* arg)
 				}
 			} else {
 				printf ("Only %i bytes available after %i samples\n",cnt, total);
-				ctx->halt_tx = 1;
+				//ctx->halt_tx = 1;
 			}
 		}
 	}

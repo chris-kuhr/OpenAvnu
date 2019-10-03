@@ -153,76 +153,82 @@ static void* packetizer_thread(void *arg) {
 	pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	pthread_mutex_lock(&threadLock);
 
-	while (ctx->listeners && !ctx->halt_tx) {
-		pthread_cond_wait(&dataReady, &threadLock);
+	while(!ctx->halt_tx) {
+        pthread_cond_wait(&dataReady, &threadLock);
 
-		while ((jack_ringbuffer_read_space(ringbuffer) >= bytes_to_read)) {
+        while ((jack_ringbuffer_read_space(ringbuffer) >= bytes_to_read)) {
 
-			glob_tmp_packet = glob_free_packets;
-			if (NULL == glob_tmp_packet)
-				goto cleanup;
-			glob_header1722 =
-				(seventeen22_header *) (((char *)glob_tmp_packet->vaddr) + 18);
-			glob_header61883 = (six1883_header *) (glob_header1722 + 1);
-			glob_free_packets = glob_tmp_packet->next;
+            jack_ringbuffer_read (ringbuffer, (char*)&framebuf[0], bytes_to_read);
 
-			/* unfortuntely unless this thread is at rtprio
-			 * you get pre-empted between fetching the time
-			 * and programming the packet and get a late packet
-			 */
-			glob_tmp_packet->attime = glob_last_time + PACKET_IPG;
-			glob_last_time += PACKET_IPG;
+            if( ctx->listeners > 0){
 
-			jack_ringbuffer_read (ringbuffer, (char*)&framebuf[0], bytes_to_read);
+                glob_tmp_packet = glob_free_packets;
+                if (NULL == glob_tmp_packet)
+                    goto cleanup;
+                glob_header1722 =
+                    (seventeen22_header *) (((char *)glob_tmp_packet->vaddr) + 18);
+                glob_header61883 = (six1883_header *) (glob_header1722 + 1);
+                glob_free_packets = glob_tmp_packet->next;
 
-			glob_header1722->seq_number = glob_seqnum++;
-			if (glob_seqnum % 4 == 0)
-				glob_header1722->timestamp_valid = 0;
+                /* unfortuntely unless this thread is at rtprio
+                 * you get pre-empted between fetching the time
+                 * and programming the packet and get a late packet
+                 */
+                glob_tmp_packet->attime = glob_last_time + PACKET_IPG;
+                glob_last_time += PACKET_IPG;
 
-			else
-				glob_header1722->timestamp_valid = 1;
 
-			glob_time_stamp = htonl(glob_time_stamp);
-			glob_header1722->timestamp = glob_time_stamp;
-			glob_time_stamp = ntohl(glob_time_stamp);
-			glob_time_stamp += PACKET_IPG;
-			glob_header61883->data_block_continuity = total_samples;
-			total_samples += SAMPLES_PER_FRAME*CHANNELS;
-			sample =
-				(six1883_sample *) (((char *)glob_tmp_packet->vaddr) +
-						(18 + sizeof(seventeen22_header) +
-						 sizeof(six1883_header)));
+                glob_header1722->seq_number = glob_seqnum++;
+                if (glob_seqnum % 4 == 0)
+                    glob_header1722->timestamp_valid = 0;
 
-			for (i = 0; i < SAMPLES_PER_FRAME * CHANNELS; ++i) {
-				uint32_t tmp = htonl(MAX_SAMPLE_VALUE * framebuf[i]);
-				sample[i].label = 0x40;
-				memcpy(&(sample[i].value), &(tmp),
-						sizeof(sample[i].value));
-			}
+                else
+                    glob_header1722->timestamp_valid = 1;
 
-			err = igb_xmit(&glob_igb_dev, 0, glob_tmp_packet);
+                glob_time_stamp = htonl(glob_time_stamp);
+                glob_header1722->timestamp = glob_time_stamp;
+                glob_time_stamp = ntohl(glob_time_stamp);
+                glob_time_stamp += PACKET_IPG;
+                glob_header61883->data_block_continuity = total_samples;
+                total_samples += SAMPLES_PER_FRAME*CHANNELS;
+                sample =
+                    (six1883_sample *) (((char *)glob_tmp_packet->vaddr) +
+                            (18 + sizeof(seventeen22_header) +
+                             sizeof(six1883_header)));
 
-			if (!err) {
-				continue;
-			}
+                for (i = 0; i < SAMPLES_PER_FRAME * CHANNELS; ++i) {
+                    uint32_t tmp = htonl(MAX_SAMPLE_VALUE * framebuf[i]);
+                    sample[i].label = 0x40;
+                    memcpy(&(sample[i].value), &(tmp),
+                            sizeof(sample[i].value));
+                }
 
-			if (ENOSPC == err) {
+                err = igb_xmit(&glob_igb_dev, 0, glob_tmp_packet);
 
-				/* put back for now */
-				glob_tmp_packet->next = glob_free_packets;
-				glob_free_packets = glob_tmp_packet;
-			}
+                if (!err) {
+                    continue;
+                }
 
-cleanup:		igb_clean(&glob_igb_dev, &cleaned_packets);
-			i = 0;
-			while (cleaned_packets) {
-			    i++;
-			    glob_tmp_packet = cleaned_packets;
-			    cleaned_packets = cleaned_packets->next;
-			    glob_tmp_packet->next = glob_free_packets;
-			    glob_free_packets = glob_tmp_packet;
-			}
-		}
+                if (ENOSPC == err) {
+
+                    /* put back for now */
+                    glob_tmp_packet->next = glob_free_packets;
+                    glob_free_packets = glob_tmp_packet;
+                }
+
+    cleanup:		igb_clean(&glob_igb_dev, &cleaned_packets);
+                i = 0;
+                while (cleaned_packets) {
+                    i++;
+                    glob_tmp_packet = cleaned_packets;
+                    cleaned_packets = cleaned_packets->next;
+                    glob_tmp_packet->next = glob_free_packets;
+                    glob_free_packets = glob_tmp_packet;
+                }
+            }
+        } else {
+            usleep(1000);
+        }
 	}
 	return NULL;
 }

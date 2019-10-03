@@ -60,6 +60,8 @@ int mrp_talker_client_init(struct mrp_talker_ctx *ctx)
 	ctx->domain_class_b_id = 0;
 	ctx->domain_class_b_priority = 0;
 	ctx->domain_class_b_vid = 0;
+	ctx->state = 0;
+
 	for (i=0;i<8;i++)
 	{
 		ctx->monitor_stream_id[i] = 0;
@@ -146,27 +148,29 @@ int process_mrp_msg(char *buf, int buflen, struct mrp_talker_ctx *ctx)
 		     recovered_streamid[4], recovered_streamid[5],
 		     recovered_streamid[6], recovered_streamid[7]);
 		switch (substate) {
-		case 0:
-			printf("with state ignore\n");
-			break;
-		case 1:
-			printf("with state askfailed\n");
-			break;
-		case 2:
-			printf("with state ready\n");
-			break;
-		case 3:
-			printf("with state readyfail\n");
-			break;
+			case 0:
+				printf("with state ignore\n");
+				ctx->state = MSRP_LISTENER_IGNORE;
+				break;
+			case 1:
+				printf("with state askfailed\n");
+				ctx->state = MSRP_LISTENER_ASKFAILED;
+				break;
+			case 2:
+				printf("with state ready\n");
+				ctx->state = MSRP_LISTENER_READY;
+				break;
+			case 3:
+				printf("with state readyfail\n");
+				ctx->state = MSRP_LISTENER_READYFAIL;
+				break;
 		default:
 			printf("with state UNKNOWN (%d)\n", substate);
 			break;
 		}
 		if (substate > MSRP_LISTENER_ASKFAILED) {
-			if (memcmp
-			    (recovered_streamid, ctx->monitor_stream_id,
-			     sizeof(recovered_streamid)) == 0) {
-				ctx->listeners = 1;
+			if (memcmp(recovered_streamid, ctx->monitor_stream_id, sizeof(recovered_streamid)) == 0) {
+				ctx->listeners++;// = 1;
 				printf("added listener\n");
 			}
 		}
@@ -254,15 +258,19 @@ int process_mrp_msg(char *buf, int buflen, struct mrp_talker_ctx *ctx)
 			switch (substate) {
 			case 0:
 				printf("with state ignore\n");
+				ctx->state = MSRP_LISTENER_IGNORE;
 				break;
 			case 1:
 				printf("with state askfailed\n");
+				ctx->state = MSRP_LISTENER_ASKFAILED;
 				break;
 			case 2:
 				printf("with state ready\n");
+				ctx->state = MSRP_LISTENER_READY;
 				break;
 			case 3:
 				printf("with state readyfail\n");
+				ctx->state = MSRP_LISTENER_READYFAIL;
 				break;
 			default:
 				printf("with state UNKNOWN (%d)\n", substate);
@@ -271,22 +279,19 @@ int process_mrp_msg(char *buf, int buflen, struct mrp_talker_ctx *ctx)
 			switch (buf[k + 1]) {
 			case 'L':
 				printf("got a leave indication\n");
-				if (memcmp
-				    (recovered_streamid, ctx->monitor_stream_id,
-				     sizeof(recovered_streamid)) == 0) {
-					ctx->listeners = 0;
+				if (memcmp(recovered_streamid, ctx->monitor_stream_id, sizeof(recovered_streamid)) == 0) {
+					ctx->listeners--; //=0;
 					printf("listener left\n");
 				}
 				break;
 			case 'J':
+				printf("got a join indication\n");
+				break;
 			case 'N':
 				printf("got a new/join indication\n");
 				if (substate > MSRP_LISTENER_ASKFAILED) {
-					if (memcmp
-					    (recovered_streamid,
-					     ctx->monitor_stream_id,
-					     sizeof(recovered_streamid)) == 0)
-						ctx->listeners = 1;
+					if (memcmp(recovered_streamid, ctx->monitor_stream_id, sizeof(recovered_streamid)) == 0)
+						ctx->listeners++;//=1;
 				}
 				break;
 			}
