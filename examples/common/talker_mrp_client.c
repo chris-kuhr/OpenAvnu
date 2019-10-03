@@ -90,11 +90,11 @@ int process_mrp_msg(char *buf, int buflen, struct mrp_talker_ctx *ctx)
 {
 
 
-	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
-                                     ctx->monitor_stream_id[0], ctx->monitor_stream_id[1],
-                                     ctx->monitor_stream_id[2], ctx->monitor_stream_id[3],
-                                     ctx->monitor_stream_id[4], ctx->monitor_stream_id[5],
-                                     ctx->monitor_stream_id[6], ctx->monitor_stream_id[7]);
+//	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
+//                                     ctx->monitor_stream_id[0], ctx->monitor_stream_id[1],
+//                                     ctx->monitor_stream_id[2], ctx->monitor_stream_id[3],
+//                                     ctx->monitor_stream_id[4], ctx->monitor_stream_id[5],
+//                                     ctx->monitor_stream_id[6], ctx->monitor_stream_id[7]);
 
 	/*
 	 * 1st character indicates application
