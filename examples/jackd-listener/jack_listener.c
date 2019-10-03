@@ -26,7 +26,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <errno.h>
 #include <signal.h>
 
+#ifdef USE_PCAP
 #include <pcap/pcap.h>
+#else
+#include "avb_sockets.h"
+#endif // USE_PCAP
+
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
 
@@ -77,6 +82,9 @@ unsigned char glob_station_addr[] = { 0, 0, 0, 0, 0, 0 };
 unsigned char glob_stream_id[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 /* IEEE 1722 reserved address */
 unsigned char glob_dest_addr[] = { 0x91, 0xE0, 0xF0, 0x00, 0x0e, 0x80 };
+struct sockaddr_in **si_other_avb;
+struct pollfd **avtp_transport_socket_fds;
+
 
 static void help()
 {
@@ -109,12 +117,12 @@ void shutdown_and_exit(int sig)
 		printf("mrp_disconnect failed\n");
 
 	close(ctx_sig->control_socket);
-
+#ifdef USE_PCAP
 	if (NULL != handle) {
 		pcap_breakloop(handle);
 		pcap_close(handle);
 	}
-
+#endif // USE_PCAP
 
 	if (NULL != client) {
 		fprintf(stdout, "jack\n");
@@ -128,6 +136,10 @@ void shutdown_and_exit(int sig)
 		exit(EXIT_FAILURE); /* fail condition */
 }
 
+
+
+
+#ifdef USE_PCAP
 void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const u_char* packet)
 {
 	unsigned char* test_stream_id;
@@ -191,6 +203,96 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 
 	}
 }
+#else
+
+
+int receive_avtp_packet(  )
+{
+    char stream_packet[BUFLEN];
+
+	uint32_t* mybuf;
+	uint32_t frame[CHANNELS];
+	jack_default_audio_sample_t jackframe[CHANNELS];
+	int cnt;
+	static int total;
+
+    struct msghdr msg;
+    struct cmsghdr *cmsg;
+    struct sockaddr_ll remote;
+    struct iovec sgentry;
+    struct {
+        struct cmsghdr cm;
+        char control[256];
+    } control;
+
+    memset( &msg, 0, sizeof( msg ));
+    msg.msg_iov = &sgentry;
+    msg.msg_iovlen = 1;
+    sgentry.iov_base = stream_packet;
+    sgentry.iov_len = BUFLEN;
+
+    memset( &remote, 0, sizeof(remote));
+    msg.msg_name = (caddr_t) &remote;
+    msg.msg_namelen = sizeof( remote );
+    msg.msg_control = &control;
+    msg.msg_controllen = sizeof(control);
+
+    int status = recvmsg((*avtp_transport_socket_fds)->fd, &msg, 0);//NULL);
+
+    if (status == 0) {
+        fprintf(stdout, "EOF\n");fflush(stdout);
+        return -1;
+    } else if (status < 0) {
+        fprintf(stdout, "Error recvmsg: %d %d %s\n", status, errno, strerror(errno));fflush(stdout);
+        return -1;
+    }
+    if( // Compare Stream IDs
+        (glob_stream_id[0] == (uint8_t) stream_packet[18]) &&
+        (glob_stream_id[1] == (uint8_t) stream_packet[19]) &&
+        (glob_stream_id[2] == (uint8_t) stream_packet[20]) &&
+        (glob_stream_id[3] == (uint8_t) stream_packet[21]) &&
+        (glob_stream_id[4] == (uint8_t) stream_packet[22]) &&
+        (glob_stream_id[5] == (uint8_t) stream_packet[23]) &&
+        (glob_stream_id[6] == (uint8_t) stream_packet[24]) &&
+        (glob_stream_id[7] == (uint8_t) stream_packet[25])
+    ){
+        mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
+
+        for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {
+
+            memcpy(&frame[0], &mybuf[i], sizeof(frame));
+
+            for(int j = 0; j < CHANNELS; j++) {
+
+                frame[j] = ntohl(frame[j]);   /* convert to host-byte order */
+                frame[j] &= 0x00ffffff;       /* ignore leading label */
+                frame[j] <<= 8;               /* left-align remaining PCM-24 sample */
+
+                jackframe[j] = ((int32_t)frame[j])/(float)(MAX_SAMPLE_VALUE);
+            }
+
+            if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
+                jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
+    //			fprintf(stdout, "Wrote %d bytes after %i samples.\n", SAMPLE_SIZE * CHANNELS, total);
+            } else {
+                fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
+            }
+
+            if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
+                /** Ringbuffer has only 25% or less write space available, it's time to tell jackd
+                to read some data. */
+                ready = 1;
+            }
+
+        }
+    }
+    return 0;
+}
+
+
+
+
+#endif // USE_PCAP
 
 static int process_jack(jack_nframes_t nframes, void* arg)
 {
@@ -296,9 +398,24 @@ int main(int argc, char *argv[])
 	char* dev = NULL;
 	int dstStreamUId = -1;
 	int dstEndpointId = -1;
+
+
+
+#ifdef USE_PCAP
 	char errbuf[PCAP_ERRBUF_SIZE];
 	struct bpf_program comp_filter_exp;		/** The compiled filter expression */
 	char filter_exp[100];	/** The filter expression */
+#else
+
+    (*avtp_transport_socket_fds) = (struct pollfd*)malloc(sizeof(struct pollfd));
+    memset((*avtp_transport_socket_fds), 0, sizeof(struct sockaddr_in));
+    (*si_other_avb) = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
+    memset((*si_other_avb), 0, sizeof(struct sockaddr_in));
+
+#endif // USE_PCAP
+
+
+
 	int rc;
 	struct mrp_listener_ctx *ctx = malloc(sizeof(struct mrp_listener_ctx));
 	struct mrp_domain_attr *class_a = malloc(sizeof(struct mrp_domain_attr));
@@ -363,6 +480,26 @@ int main(int argc, char *argv[])
                                      glob_dest_addr[2], glob_dest_addr[3],
                                      glob_dest_addr[4], glob_dest_addr[5]);
 
+#ifndef USE_PCAP
+    fprintf(stdout,  "create RAW AVTP Socket %s  \n", dev);fflush(stdout);
+
+    if( create_RAW_AVB_Transport_Socket(stdout, &((*avtp_transport_socket_fds)->fd), dev) > RETURN_VALUE_FAILURE ){
+        fprintf(stdout,  "enable IEEE1722 AVTP MAC filter %x:%x:%x:%x:%x:%x  \n",
+                                                                                glob_dest_addr[0],
+                                                                                glob_dest_addr[1],
+                                                                                glob_dest_addr[2],
+                                                                                glob_dest_addr[3],
+                                                                                glob_dest_addr[4],
+                                                                                glob_dest_addr[5]);fflush(stdout);
+
+        enable_1722avtp_filter(stdout, (*avtp_transport_socket_fds)->fd, glob_dest_addr);
+        (*avtp_transport_socket_fds)->events = POLLIN;
+    } else {
+        fprintf(stdout,  "Listener Creation failed\n");fflush(stdout);
+    }
+
+#endif // USE_PCAP
+
 
 	if (create_socket(ctx)) {
 		fprintf(stderr, "Socket creation failed.\n");
@@ -409,6 +546,23 @@ int main(int argc, char *argv[])
 	}
 
 
+
+
+
+
+
+
+
+
+
+
+
+	/*
+	 *      Replace with raw socket!!!
+     */
+
+
+#ifdef USE_PCAP
 	fprintf(stdout,"PCAP live capture...\n");
 	/** session, get session handler */
 	handle = pcap_open_live(dev, BUFSIZ, 1, -1, errbuf);
@@ -431,6 +585,25 @@ int main(int argc, char *argv[])
 
 	/** loop forever and call callback-function for every received packet */
 	pcap_loop(handle, -1, pcap_callback, (u_char*)ctx);
+#else
+
+    while(!ctx->halt_tx){
+        receive_avtp_packet();
+    }
+
+
+#endif // USE_PCAP
+
+
+
+
+
+
+
+
+
+
+
 
 	usleep(-1);
 	free(ctx);
