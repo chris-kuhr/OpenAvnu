@@ -33,7 +33,7 @@ static int process(jack_nframes_t nframes, void* arg)
 
 	/* Do nothing until we're ready to begin. */
 	if (!glob_unleash_jack) {
-		printf ("nothing to do\n");
+//		printf ("nothing to do\n");
 		return 0;
 	}
 
@@ -46,9 +46,9 @@ static int process(jack_nframes_t nframes, void* arg)
 			if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE) {
 				jack_ringbuffer_write(ringbuffer,(void*) (in[j]+i), SAMPLE_SIZE);
                 total++;
-				if (total % 5000 == 0) {
-					printf ("Available writespace: %i\n", cnt);
-				}
+//				if (total % 5000 == 0) {
+//					printf ("Available writespace: %i\n", cnt);
+//				}
 			} else {
 				printf ("Only %i bytes available after %i samples\n",cnt, total);
 				//ctx->halt_tx = 1;

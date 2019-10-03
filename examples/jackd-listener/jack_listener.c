@@ -168,6 +168,7 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 
 		if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
 			jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
+			fprintf(stdout, "Wrote %d bytes after %i samples.\n", SAMPLE_SIZE * CHANNELS, total);
 		} else {
 			//fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
 		}
