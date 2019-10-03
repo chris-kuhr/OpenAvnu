@@ -143,14 +143,21 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 	eth_header = (struct ethernet_header*)(packet);
 
 	if (0 != memcmp(glob_ether_type, eth_header->type,sizeof(eth_header->type))) {
-        fprintf(stdout,"wrong eth type...\n");
 		return;
 	}
 
 	test_stream_id = (unsigned char*)(packet + ETHERNET_HEADER_SIZE + SEVENTEEN22_HEADER_PART1_SIZE);
-	if (0 != memcmp(test_stream_id, ctx->stream_id, STREAM_ID_SIZE)) {
 
-        fprintf(stdout,"wrong stream id...\n");
+	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x \t %02x%02x%02x%02x%02x%02x%02x%02x \n",
+                                     ctx->stream_id[0], ctx->stream_id[1],
+                                     ctx->stream_id[2], ctx->stream_id[3],
+                                     ctx->stream_id[4], ctx->stream_id[5],
+                                     ctx->stream_id[6], ctx->stream_id[7],
+                                     test_stream_id[0], test_stream_id[1],
+                                     test_stream_id[2], test_stream_id[3],
+                                     test_stream_id[4], test_stream_id[5],
+                                     test_stream_id[6], test_stream_id[7]);
+	if (0 != memcmp(test_stream_id, ctx->stream_id, STREAM_ID_SIZE)) {
 		return;
 	}
 
