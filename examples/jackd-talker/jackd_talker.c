@@ -365,8 +365,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	igb_set_class_bandwidth(&glob_igb_dev, PACKET_IPG / 125000, 0, PKT_SZ - 22,
-				0);
+	igb_set_class_bandwidth(&glob_igb_dev, PACKET_IPG / 125000, 0, PKT_SZ - 22, 0);
 
 
 	a_packet.dmatime = a_packet.attime = a_packet.flags = 0;

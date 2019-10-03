@@ -33,7 +33,7 @@ static int process(jack_nframes_t nframes, void* arg)
 
 	/* Do nothing until we're ready to begin. */
 	if (!glob_unleash_jack) {
-		//printf ("nothing to do\n");
+		printf ("nothing to do\n");
 		return 0;
 	}
 
@@ -43,15 +43,14 @@ static int process(jack_nframes_t nframes, void* arg)
 
 	for (size_t i = 0; i < nframes; i++) {
 		for(int j = 0; j < CHANNELS; j++) {
-			total++;
 			if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE) {
-				jack_ringbuffer_write(ringbuffer,
-						(void*) (in[j]+i), SAMPLE_SIZE);
+				jack_ringbuffer_write(ringbuffer,(void*) (in[j]+i), SAMPLE_SIZE);
+                total++;
 				if (total % 5000 == 0) {
-					//printf ("Available writespace: %i\n", cnt);
+					printf ("Available writespace: %i\n", cnt);
 				}
 			} else {
-				//printf ("Only %i bytes available after %i samples\n",cnt, total);
+				printf ("Only %i bytes available after %i samples\n",cnt, total);
 				ctx->halt_tx = 1;
 			}
 		}
@@ -99,10 +98,7 @@ jack_client_t* init_jack(struct mrp_talker_ctx *ctx)
 	jack_set_process_callback(client, process, (void *)ctx);
 	jack_on_shutdown(client, jack_shutdown, (void *)ctx);
 
-	if (jack_activate (client))
-		fprintf (stderr, "cannot activate client");
-
-    	int nframes = jack_get_buffer_size(client);
+    int nframes = jack_get_buffer_size(client);
 	inputports = (jack_port_t**) malloc (CHANNELS * sizeof (jack_port_t*));
 	in = (jack_default_audio_sample_t**) malloc (CHANNELS * sizeof (jack_default_audio_sample_t*));
 	ringbuffer = jack_ringbuffer_create (SAMPLE_SIZE * DEFAULT_RINGBUFFER_SIZE * CHANNELS);
@@ -110,6 +106,10 @@ jack_client_t* init_jack(struct mrp_talker_ctx *ctx)
 
 	memset(in, 0, sizeof (jack_default_audio_sample_t*)*CHANNELS);
 	memset(ringbuffer->buf, 0, ringbuffer->size);
+
+	if (jack_activate (client))
+		fprintf (stderr, "cannot activate client");
+
 
 	for(int i = 0; i < CHANNELS; i++)
 	{
