@@ -89,6 +89,13 @@ int send_mrp_msg(char *notify_data, int notify_len, struct mrp_talker_ctx *ctx)
 int process_mrp_msg(char *buf, int buflen, struct mrp_talker_ctx *ctx)
 {
 
+
+	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
+                                     ctx->monitor_stream_id[0], ctx->monitor_stream_id[1],
+                                     ctx->monitor_stream_id[2], ctx->monitor_stream_id[3],
+                                     ctx->monitor_stream_id[4], ctx->monitor_stream_id[5],
+                                     ctx->monitor_stream_id[6], ctx->monitor_stream_id[7]);
+
 	/*
 	 * 1st character indicates application
 	 * [MVS] - MAC, VLAN or STREAM
@@ -307,6 +314,13 @@ void *mrp_monitor_thread(void *arg)
 	int rc;
 	struct mrp_talker_ctx *ctx = (struct mrp_talker_ctx*) arg;
 
+
+	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
+                                     ctx->monitor_stream_id[0], ctx->monitor_stream_id[1],
+                                     ctx->monitor_stream_id[2], ctx->monitor_stream_id[3],
+                                     ctx->monitor_stream_id[4], ctx->monitor_stream_id[5],
+                                     ctx->monitor_stream_id[6], ctx->monitor_stream_id[7]);
+
 	msgbuf = (char *)malloc(MAX_MRPD_CMDSZ);
 	if (NULL == msgbuf)
 		return NULL;
@@ -428,6 +442,17 @@ mrp_advertise_stream(uint8_t * streamid,
 {
 	char *msgbuf;
 	int rc;
+
+
+	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
+                                     stream_id[0], stream_id[1],
+                                     stream_id[2], stream_id[3],
+                                     stream_id[4], stream_id[5],
+                                     stream_id[6], stream_id[7]);
+    printf("Dest MAC: %02x%02x%02x%02x%02x%02x\n",
+                                     destaddr[0], destaddr[1],
+                                     destaddr[2], destaddr[3],
+                                     destaddr[4], destaddr[5]);
 
 	msgbuf = malloc(1500);
 	if (NULL == msgbuf)

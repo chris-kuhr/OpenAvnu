@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
 	memcpy(glob_stream_id, glob_station_addr, sizeof(glob_station_addr));
 	memcpy(ctx->monitor_stream_id, glob_stream_id, sizeof(glob_stream_id));
 
-	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x",
+	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
                                      ctx->monitor_stream_id[0], ctx->monitor_stream_id[1],
                                      ctx->monitor_stream_id[2], ctx->monitor_stream_id[3],
                                      ctx->monitor_stream_id[4], ctx->monitor_stream_id[5],

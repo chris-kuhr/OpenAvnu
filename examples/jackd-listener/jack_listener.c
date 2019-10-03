@@ -351,11 +351,16 @@ int main(int argc, char *argv[])
 	memcpy(glob_stream_id, glob_station_addr, sizeof(glob_station_addr));
 	memcpy(ctx->stream_id, glob_stream_id, sizeof(glob_stream_id));
 
-	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x",
+	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
                                      ctx->stream_id[0], ctx->stream_id[1],
                                      ctx->stream_id[2], ctx->stream_id[3],
                                      ctx->stream_id[4], ctx->stream_id[5],
                                      ctx->stream_id[6], ctx->stream_id[7]);
+	printf("Dest MAC: %02x%02x%02x%02x%02x%02x\n",
+                                     glob_dest_addr[0], glob_dest_addr[1],
+                                     glob_dest_addr[2], glob_dest_addr[3],
+                                     glob_dest_addr[4], glob_dest_addr[5]);
+
 
 	if (create_socket(ctx)) {
 		fprintf(stderr, "Socket creation failed.\n");

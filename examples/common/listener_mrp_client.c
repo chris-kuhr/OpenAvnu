@@ -84,6 +84,17 @@ int msg_process(char *buf, int buflen, struct mrp_listener_ctx *ctx)
 	unsigned int vid;
 	unsigned int priority;
 
+	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
+                                     ctx->stream_id[0], ctx->stream_id[1],
+                                     ctx->stream_id[2], ctx->stream_id[3],
+                                     ctx->stream_id[4], ctx->stream_id[5],
+                                     ctx->stream_id[6], ctx->stream_id[7]);
+    printf("Dest MAC: %02x%02x%02x%02x%02x%02x\n",
+                                     ctx->dst_mac[0], ctx->dst_mac[1],
+                                     ctx->dst_mac[2], ctx->dst_mac[3],
+                                     ctx->dst_mac[4], ctx->dst_mac[5]);
+
+
 	fprintf(stderr, "Msg: %s\n", buf);
 
 	if (strncmp(buf, "SNE T:", 6) == 0 || strncmp(buf, "SJO T:", 6) == 0)
@@ -176,6 +187,16 @@ void *mrp_monitor_thread(void *arg)
 	struct pollfd fds;
 	int rc;
 	struct mrp_listener_ctx *ctx = (struct mrp_listener_ctx*) arg;
+
+	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
+                                     ctx->stream_id[0], ctx->stream_id[1],
+                                     ctx->stream_id[2], ctx->stream_id[3],
+                                     ctx->stream_id[4], ctx->stream_id[5],
+                                     ctx->stream_id[6], ctx->stream_id[7]);
+    printf("Dest MAC: %02x%02x%02x%02x%02x%02x\n",
+                                     ctx->dst_mac[0], ctx->dst_mac[1],
+                                     ctx->dst_mac[2], ctx->dst_mac[3],
+                                     ctx->dst_mac[4], ctx->dst_mac[5]);
 
 	msgbuf = (char *)malloc(MAX_MRPD_CMDSZ);
 	if (NULL == msgbuf)
