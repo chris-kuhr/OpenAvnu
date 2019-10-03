@@ -52,11 +52,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define DEFAULT_RINGBUFFER_SIZE (32768)
 #define MAX_SAMPLE_VALUE ((1U << ((sizeof(int32_t) * 8) -1)) -1)
 
-
-#define TOTAL_SAMPLESIZE_PER_FRAME  (SAMPLE_SIZE * SAMPLES_PER_FRAME)
-#define TOTAL_SAMPLE_CNT_PER_FRAME  (SAMPLES_PER_FRAME * CHANNELS)
-#define BUF_LVL                     (SAMPLE_SIZE * SAMPLES_PER_FRAME * DEFAULT_RINGBUFFER_SIZE)
-#define BUFPRELOAD_LVL              (BUF_LVL/4)
 struct mrp_listener_ctx *ctx_sig;//Context pointer for signal handler
 
 struct ethernet_header{
@@ -75,9 +70,7 @@ pcap_t* handle;
 u_char glob_ether_type[] = { 0x22, 0xf0 };
 static jack_port_t** outputports;
 static jack_default_audio_sample_t** out;
-jack_ringbuffer_t* ringbuffer[CHANNELS];
-uint32_t frame[TOTAL_SAMPLE_CNT_PER_FRAME];
-jack_default_audio_sample_t jackframe[TOTAL_SAMPLE_CNT_PER_FRAME];
+jack_ringbuffer_t* ringbuffer;
 jack_client_t* client;
 volatile int ready = 0;
 unsigned char glob_station_addr[] = { 0, 0, 0, 0, 0, 0 };
@@ -122,11 +115,11 @@ void shutdown_and_exit(int sig)
 		pcap_close(handle);
 	}
 
+
 	if (NULL != client) {
 		fprintf(stdout, "jack\n");
 		jack_client_close(client);
-		for(int i= 0; i< CHANNELS; i++)
-            jack_ringbuffer_free(ringbuffer[i]);
+		jack_ringbuffer_free(ringbuffer);
 	}
 
 	if (sig != 0)
@@ -140,6 +133,8 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 	unsigned char* test_stream_id;
 	struct ethernet_header* eth_header;
 	uint32_t* mybuf;
+	uint32_t frame[CHANNELS];
+	jack_default_audio_sample_t jackframe[CHANNELS];
 	int cnt;
 	static int total;
 	struct mrp_listener_ctx *ctx = (struct mrp_listener_ctx*) args;
@@ -158,34 +153,32 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 
 	mybuf = (uint32_t*) (packet + HEADER_SIZE);
 
-	for(int j = 0; j < TOTAL_SAMPLE_CNT_PER_FRAME; j+=CHANNELS) {
-		for(int i = 0; i < CHANNELS; i++) {
-            memcpy(&frame[j + i], &mybuf[j + i], sizeof(frame));
+	for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {
 
-			uint32_t channel = ntohl(frame[j + i]);   /* convert to host-byte order */
-			channel &= 0x00ffffff;       /* ignore leading label */
-			channel <<= 8;               /* left-align remaining PCM-24 sample */
+		memcpy(&frame[0], &mybuf[i], sizeof(frame));
 
-			jackframe[j + i*SAMPLES_PER_FRAME] = ((int32_t)channel)/(float)(MAX_SAMPLE_VALUE);
+		for(int j = 0; j < CHANNELS; j++) {
+
+			frame[j] = ntohl(frame[j]);   /* convert to host-byte order */
+			frame[j] &= 0x00ffffff;       /* ignore leading label */
+			frame[j] <<= 8;               /* left-align remaining PCM-24 sample */
+
+			jackframe[j] = ((int32_t)frame[j])/(float)(MAX_SAMPLE_VALUE);
 		}
-    }
 
+		if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
+			jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
+		} else {
+			//fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
+		}
 
-    for(int i = 0; i < CHANNELS; i++) {
-        if ((cnt = jack_ringbuffer_write_space(ringbuffer[i])) >= TOTAL_SAMPLESIZE_PER_FRAME) {
-            jack_ringbuffer_write(ringbuffer[i], (void*)&jackframe[i*SAMPLES_PER_FRAME], TOTAL_SAMPLESIZE_PER_FRAME);
-            total += CHANNELS;
+		if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
+			/** Ringbuffer has only 25% or less write space available, it's time to tell jackd
+			to read some data. */
+			ready = 1;
+		}
 
-        } else {
-            //fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
-        }
-
-        if (jack_ringbuffer_write_space(ringbuffer[i]) <= BUFPRELOAD_LVL) {
-            /** Ringbuffer has only 25% or less write space available, it's time to tell jackd
-            to read some data. */
-            ready = 1;
-        }
-    }
+	}
 }
 
 static int process_jack(jack_nframes_t nframes, void* arg)
@@ -200,14 +193,16 @@ static int process_jack(jack_nframes_t nframes, void* arg)
 		out[i] = jack_port_get_buffer(outputports[i], nframes);
 	}
 
-	for(int i = 0; i < CHANNELS; i++) {
+	for(size_t i = 0; i < nframes; i++) {
 
-		if (jack_ringbuffer_read_space(ringbuffer[i]) >= SAMPLE_SIZE * nframes) {
+		if (jack_ringbuffer_read_space(ringbuffer) >= SAMPLE_SIZE * CHANNELS) {
 
-            jack_ringbuffer_read (ringbuffer[i], (char*)(out[i]), SAMPLE_SIZE * nframes);
+			for(int j = 0; j < CHANNELS; j++){
+				jack_ringbuffer_read (ringbuffer, (char*)(out[j]+i), SAMPLE_SIZE);
+			}
 
 		} else {
-			printf ("underrun\n");
+			//printf ("underrun\n");
 			ready = 0;
 
 			return 0;
@@ -253,18 +248,14 @@ jack_client_t* init_jack(struct mrp_listener_ctx *ctx)
 
 	outputports = (jack_port_t**) malloc (CHANNELS * sizeof (jack_port_t*));
 	int nframes = jack_get_buffer_size(client);
-	int mallocSize = CHANNELS * nframes * sizeof (jack_default_audio_sample_t*);
+	out = (jack_default_audio_sample_t**) malloc (CHANNELS * sizeof (jack_default_audio_sample_t*));
+	ringbuffer = jack_ringbuffer_create (SAMPLE_SIZE * DEFAULT_RINGBUFFER_SIZE * CHANNELS);
+	jack_ringbuffer_mlock(ringbuffer);
 
-	out = (jack_default_audio_sample_t**) malloc (mallocSize);
+	memset(out, 0, sizeof (jack_default_audio_sample_t*)*CHANNELS);
+	memset(ringbuffer->buf, 0, ringbuffer->size);
 
 	for(int i = 0; i < CHANNELS; i++) {
-
-        ringbuffer[i] = jack_ringbuffer_create (BUF_LVL);
-        jack_ringbuffer_mlock(ringbuffer[i]);
-
-        memset(out, 0, mallocSize );
-        memset(ringbuffer[i]->buf, 0, ringbuffer[i]->size);
-
 
 		char* portName;
 		if (asprintf(&portName, "output%d", i) < 0) {
@@ -296,14 +287,13 @@ int main(int argc, char *argv[])
 	int dstEndpointId = -1;
 	char errbuf[PCAP_ERRBUF_SIZE];
 	struct bpf_program comp_filter_exp;		/** The compiled filter expression */
-	char filter_exp[100];	                /** The filter expression */
+	char filter_exp[100];	/** The filter expression */
 	int rc;
 	struct mrp_listener_ctx *ctx = malloc(sizeof(struct mrp_listener_ctx));
 	struct mrp_domain_attr *class_a = malloc(sizeof(struct mrp_domain_attr));
 	struct mrp_domain_attr *class_b = malloc(sizeof(struct mrp_domain_attr));
 	ctx_sig = ctx;
 	signal(SIGINT, shutdown_and_exit);
-
 
 	int c;
 	while((c = getopt(argc, argv, "hi:s:e:")) > 0)	{
@@ -405,6 +395,7 @@ int main(int argc, char *argv[])
 		printf("send_ready failed\n");
 		return EXIT_FAILURE;
 	}
+
 
 	/** session, get session handler */
 	handle = pcap_open_live(dev, BUFSIZ, 1, -1, errbuf);
