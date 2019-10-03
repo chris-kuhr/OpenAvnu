@@ -117,8 +117,7 @@ int get_mac_address(char *interface)
 		close(lsock);
 		return -1;
 	}
-	memcpy(glob_station_addr, if_request.ifr_hwaddr.sa_data,
-	       sizeof(glob_station_addr));
+	//memcpy(glob_station_addr, if_request.ifr_hwaddr.sa_data, sizeof(glob_station_addr));
 	close(lsock);
 	return 0;
 }
@@ -165,8 +164,7 @@ static void* packetizer_thread(void *arg) {
                 glob_tmp_packet = glob_free_packets;
                 if (NULL == glob_tmp_packet)
                     goto cleanup;
-                glob_header1722 =
-                    (seventeen22_header *) (((char *)glob_tmp_packet->vaddr) + 18);
+                glob_header1722 = (seventeen22_header *) (((char *)glob_tmp_packet->vaddr) + 18);
                 glob_header61883 = (six1883_header *) (glob_header1722 + 1);
                 glob_free_packets = glob_tmp_packet->next;
 
