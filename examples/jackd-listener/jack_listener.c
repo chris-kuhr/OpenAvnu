@@ -71,7 +71,11 @@ struct ethernet_header{
 static const char *version_str = "jack_listener v" VERSION_STR "\n"
     "Copyright (c) 2013, Katja Rohloff, Copyright (c) 2019, Christoph Kuhr\n";
 
+
+#ifdef USE_PCAP
 pcap_t* handle;
+#endif // USE_PCAP
+
 u_char glob_ether_type[] = { 0x22, 0xf0 };
 static jack_port_t** outputports;
 static jack_default_audio_sample_t** out;
