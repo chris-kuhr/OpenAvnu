@@ -148,15 +148,15 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 
 	test_stream_id = (unsigned char*)(packet + ETHERNET_HEADER_SIZE + SEVENTEEN22_HEADER_PART1_SIZE);
 
-	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x \t %02x%02x%02x%02x%02x%02x%02x%02x \n",
-                                     ctx->stream_id[0], ctx->stream_id[1],
-                                     ctx->stream_id[2], ctx->stream_id[3],
-                                     ctx->stream_id[4], ctx->stream_id[5],
-                                     ctx->stream_id[6], ctx->stream_id[7],
-                                     test_stream_id[0], test_stream_id[1],
-                                     test_stream_id[2], test_stream_id[3],
-                                     test_stream_id[4], test_stream_id[5],
-                                     test_stream_id[6], test_stream_id[7]);
+//	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x \t %02x%02x%02x%02x%02x%02x%02x%02x \n",
+//                                     ctx->stream_id[0], ctx->stream_id[1],
+//                                     ctx->stream_id[2], ctx->stream_id[3],
+//                                     ctx->stream_id[4], ctx->stream_id[5],
+//                                     ctx->stream_id[6], ctx->stream_id[7],
+//                                     test_stream_id[0], test_stream_id[1],
+//                                     test_stream_id[2], test_stream_id[3],
+//                                     test_stream_id[4], test_stream_id[5],
+//                                     test_stream_id[6], test_stream_id[7]);
 	if (0 != memcmp(test_stream_id, ctx->stream_id, STREAM_ID_SIZE)) {
 		return;
 	}
@@ -178,9 +178,9 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 
 		if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
 			jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
-			fprintf(stdout, "Wrote %d bytes after %i samples.\n", SAMPLE_SIZE * CHANNELS, total);
+//			fprintf(stdout, "Wrote %d bytes after %i samples.\n", SAMPLE_SIZE * CHANNELS, total);
 		} else {
-			//fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
+			fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
 		}
 
 		if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
