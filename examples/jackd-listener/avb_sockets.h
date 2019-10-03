@@ -41,11 +41,6 @@ extern "C"
 
 #include <netinet/in.h>
 #include <linux/if.h>
-#include <jack/transport.h>
-#include "jack/jslist.h"
-
-#include "OpenAvnu/daemons/mrpd/mrpd.h"
-#include "OpenAvnu/daemons/mrpd/mrp.h"
 
 #define RETURN_VALUE_FAILURE 0
 #define RETURN_VALUE_SUCCESS 1
