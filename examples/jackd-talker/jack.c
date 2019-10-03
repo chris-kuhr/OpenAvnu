@@ -51,8 +51,7 @@ static int process(jack_nframes_t nframes, void* arg)
 					//printf ("Available writespace: %i\n", cnt);
 				}
 			} else {
-				//printf ("Only %i bytes available after %i samples\n",
-						cnt, total);
+				//printf ("Only %i bytes available after %i samples\n",cnt, total);
 				ctx->halt_tx = 1;
 			}
 		}
