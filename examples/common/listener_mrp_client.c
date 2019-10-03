@@ -107,13 +107,13 @@ int msg_process(char *buf, int buflen, struct mrp_listener_ctx *ctx)
 		for(j = 0; j < 8 ; l+=2, j++)
 		{
 			sscanf(&buf[l],"%02x",&id);
-			ctx->stream_id[j] = (unsigned char)id;
+			//ctx->stream_id[j] = (unsigned char)id;
 		}
 		l+=3;
 		for(j = 0; j < 6 ; l+=2, j++)
 		{
 			sscanf(&buf[l],"%02x",&id);
-			ctx->dst_mac[j] = (unsigned char)id;
+			//ctx->dst_mac[j] = (unsigned char)id;
 		}
 		ctx->talker = 1;
 	}
