@@ -226,8 +226,6 @@ static void* packetizer_thread(void *arg) {
                     glob_free_packets = glob_tmp_packet;
                 }
             }
-        } else {
-            usleep(1000);
         }
 	}
 	return NULL;
