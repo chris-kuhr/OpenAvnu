@@ -323,7 +323,7 @@ int join_vlan(struct mrp_domain_attr *class_a, struct mrp_listener_ctx *ctx)
 int await_talker(struct mrp_listener_ctx *ctx)
 {
 	while (0 == ctx->talker)
-		;
+		usleep(1000);
 	return 0;
 }
 

@@ -143,11 +143,14 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 	eth_header = (struct ethernet_header*)(packet);
 
 	if (0 != memcmp(glob_ether_type, eth_header->type,sizeof(eth_header->type))) {
+        fprintf(stdout,"wrong eth type...\n");
 		return;
 	}
 
 	test_stream_id = (unsigned char*)(packet + ETHERNET_HEADER_SIZE + SEVENTEEN22_HEADER_PART1_SIZE);
 	if (0 != memcmp(test_stream_id, ctx->stream_id, STREAM_ID_SIZE)) {
+
+        fprintf(stdout,"wrong stream id...\n");
 		return;
 	}
 
@@ -390,6 +393,7 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout,"Waiting for talker...\n");
 	await_talker(ctx);
+	fprintf(stdout,"Found talker...\n");
 
 	rc = send_ready(ctx);
 	if (rc) {
@@ -398,6 +402,7 @@ int main(int argc, char *argv[])
 	}
 
 
+	fprintf(stdout,"PCAP live capture...\n");
 	/** session, get session handler */
 	handle = pcap_open_live(dev, BUFSIZ, 1, -1, errbuf);
 	if (NULL == handle) {
