@@ -445,10 +445,10 @@ mrp_advertise_stream(uint8_t * streamid,
 
 
 	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
-                                     stream_id[0], stream_id[1],
-                                     stream_id[2], stream_id[3],
-                                     stream_id[4], stream_id[5],
-                                     stream_id[6], stream_id[7]);
+                                     streamid[0], streamid[1],
+                                     streamid[2], streamid[3],
+                                     streamid[4], streamid[5],
+                                     streamid[6], streamid[7]);
     printf("Dest MAC: %02x%02x%02x%02x%02x%02x\n",
                                      destaddr[0], destaddr[1],
                                      destaddr[2], destaddr[3],
