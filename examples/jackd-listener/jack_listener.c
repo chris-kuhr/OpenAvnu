@@ -86,7 +86,6 @@ unsigned char glob_station_addr[] = { 0, 0, 0, 0, 0, 0 };
 unsigned char glob_stream_id[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 /* IEEE 1722 reserved address */
 unsigned char glob_dest_addr[] = { 0x91, 0xE0, 0xF0, 0x00, 0x0e, 0x80 };
-struct sockaddr_in *si_other_avb;
 struct pollfd *avtp_transport_socket_fds;
 
 
@@ -241,7 +240,7 @@ int receive_avtp_packet(  )
     msg.msg_control = &control;
     msg.msg_controllen = sizeof(control);
 
-    int status = recvmsg((*avtp_transport_socket_fds)->fd, &msg, 0);//NULL);
+    int status = recvmsg(avtp_transport_socket_fds->fd, &msg, 0);//NULL);
 
     if (status == 0) {
         fprintf(stdout, "EOF\n");fflush(stdout);
@@ -412,9 +411,7 @@ int main(int argc, char *argv[])
 #else
 
     avtp_transport_socket_fds = (struct pollfd*)malloc(sizeof(struct pollfd));
-    memset(avtp_transport_socket_fds, 0, sizeof(struct sockaddr_in));
-    si_other_avb = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
-    memset(si_other_avb, 0, sizeof(struct sockaddr_in));
+    memset(avtp_transport_socket_fds, 0, sizeof(avtp_transport_socket_fds));
 
 #endif // USE_PCAP
 
@@ -487,7 +484,7 @@ int main(int argc, char *argv[])
 #ifndef USE_PCAP
     fprintf(stdout,  "create RAW AVTP Socket %s  \n", dev);fflush(stdout);
 
-    if( create_RAW_AVB_Transport_Socket(stdout, &((*avtp_transport_socket_fds)->fd), dev) > RETURN_VALUE_FAILURE ){
+    if( create_RAW_AVB_Transport_Socket(stdout, &(avtp_transport_socket_fds->fd), dev) > RETURN_VALUE_FAILURE ){
         fprintf(stdout,  "enable IEEE1722 AVTP MAC filter %x:%x:%x:%x:%x:%x  \n",
                                                                                 glob_dest_addr[0],
                                                                                 glob_dest_addr[1],
@@ -496,8 +493,8 @@ int main(int argc, char *argv[])
                                                                                 glob_dest_addr[4],
                                                                                 glob_dest_addr[5]);fflush(stdout);
 
-        enable_1722avtp_filter(stdout, (*avtp_transport_socket_fds)->fd, glob_dest_addr);
-        (*avtp_transport_socket_fds)->events = POLLIN;
+        enable_1722avtp_filter(stdout, avtp_transport_socket_fds->fd, glob_dest_addr);
+        avtp_transport_socket_fds->events = POLLIN;
     } else {
         fprintf(stdout,  "Listener Creation failed\n");fflush(stdout);
     }
@@ -610,6 +607,7 @@ int main(int argc, char *argv[])
 
 
 	usleep(-1);
+	free(avtp_transport_socket_fds);
 	free(ctx);
 	free(class_a);
 	free(class_b);
