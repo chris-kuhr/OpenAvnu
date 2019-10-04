@@ -86,8 +86,8 @@ unsigned char glob_station_addr[] = { 0, 0, 0, 0, 0, 0 };
 unsigned char glob_stream_id[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 /* IEEE 1722 reserved address */
 unsigned char glob_dest_addr[] = { 0x91, 0xE0, 0xF0, 0x00, 0x0e, 0x80 };
-struct sockaddr_in **si_other_avb;
-struct pollfd **avtp_transport_socket_fds;
+struct sockaddr_in *si_other_avb;
+struct pollfd *avtp_transport_socket_fds;
 
 
 static void help()
@@ -411,10 +411,10 @@ int main(int argc, char *argv[])
 	char filter_exp[100];	/** The filter expression */
 #else
 
-    (*avtp_transport_socket_fds) = (struct pollfd*)malloc(sizeof(struct pollfd));
-    memset((*avtp_transport_socket_fds), 0, sizeof(struct sockaddr_in));
-    (*si_other_avb) = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
-    memset((*si_other_avb), 0, sizeof(struct sockaddr_in));
+    avtp_transport_socket_fds = (struct pollfd*)malloc(sizeof(struct pollfd));
+    memset(avtp_transport_socket_fds, 0, sizeof(struct sockaddr_in));
+    si_other_avb = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
+    memset(si_other_avb, 0, sizeof(struct sockaddr_in));
 
 #endif // USE_PCAP
 
