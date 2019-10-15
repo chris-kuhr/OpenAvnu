@@ -6,7 +6,7 @@
 	url = ../../AVnu/avdecc-lib
 [submodule "lib/igb_avb"]
 	path = lib/igb_avb
-	url = https://github.com/chris-kuhr/igb_avb.git
-[submodule "daemons/gptp"]
-	path = daemons/gptp
-	url = https://github.com/chris-kuhr/gptp.git
+	url = https://github.com/AVnu/igb_avb.git
+[submodule "lib/atl_avb"]
+	path = lib/atl_avb
+	url = https://github.com/Aquantia/atl_avb
