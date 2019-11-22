@@ -428,15 +428,15 @@ int main(int argc, char *argv[])
 		glob_header61883->app_control = 0x0;
 		glob_header61883->reserved0 = 0;
 		glob_header61883->source_id = 0x3F;
-		glob_header61883->data_block_size = 1;
+		glob_header61883->data_block_size = CHANNELS;
 		glob_header61883->fraction_number = 0;
 		glob_header61883->quadlet_padding_count = 0;
 		glob_header61883->source_packet_header = 0;
 		glob_header61883->reserved1 = 0;
 		glob_header61883->eoh = 0x2;
 		glob_header61883->format_id = 0x10;
-		glob_header61883->format_dependent_field = 0x02;
-		glob_header61883->syt = 0xFFFF;
+		glob_header61883->format_dependent_field = 0x02;                // sample rate encoded: 2 = 48khz, 4 = 96khz
+		glob_header61883->syt = 0xFFFF;                                 // 8 for 48khz, 16 for 96khz
 		glob_tmp_packet->len =
 		    18 + sizeof(seventeen22_header) + sizeof(six1883_header) +
 		    (SAMPLES_PER_FRAME * CHANNELS * sizeof(six1883_sample));

@@ -10,3 +10,6 @@
 [submodule "daemons/gptp"]
 	path = daemons/gptp
 	url = https://github.com/chris-kuhr/gptp.git
+[submodule "lib/libbpf"]
+	path = lib/libbpf
+	url = https://github.com/libbpf/libbpf
