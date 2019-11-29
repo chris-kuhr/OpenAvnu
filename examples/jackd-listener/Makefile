@@ -44,7 +44,6 @@ LDFLAGS_BPF = -L$(LIBBPF_DIR)
 
 .PHONY: clean loader $(XDP_OBJ)
 
-
 all: $(XDP_OBJ) loader jack_listener 
 
 jack_listener: jack_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
