@@ -1,6 +1,4 @@
 # SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-
-# Departing from the implicit _user.c scheme
 XDP_TARGETS  := xdp_avb_kern
 
 LIBBPF_DIR = ../libbpf/src/
@@ -32,10 +30,8 @@ CFLAGS += -I/usr/include/x86_64-linux-gnu
 CFLAGS += -I../headers/
 LDFLAGS ?= -L$(LIBBPF_DIR)
 
-
-
 MRPCLIENT_DIR = ../../common
-MRPLISTENER_OBJS = listener_mrp_client.o
+MRPLISTENER_OBJS = 
 MRPLISTENER_TARGETS = $(addprefix $(MRPCLIENT_DIR)/,$(MRPLISTENER_OBJS))
 
 DAEMONS_DIR = ../../../daemons
@@ -46,18 +42,17 @@ CFLAGS_AVB = $(OPT) $(WARN) -std=gnu99
 CPPFLAGS_AVB = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
 LDLIBS_AVB = -ljack -lpthread
 
-LIBS = -l:libbpf.a -lelf $(LDLIBS_AVB)
+LIBS = -l:libbpf.a -lelf 
 
 
-all: jack_listener llvm-check  $(XDP_OBJ)
+all: jack_listener
 
 
-jack_listener: jack_listener.o avb_sockets.o $(MRPLISTENER_TARGETS) xdp_load_and_stats.o
+jack_listener: jack_listener.o avb_sockets.o listener_mrp_client.o xdp_load_and_stats.o $(XDP_OBJ) 
 
 jack_listener.o: jack_listener.c avb_sockets.c xdp_load_and_stats.c $(OBJECT_LIBBPF) Makefile $(COMMON_MK_BPF) $(COMMON_OBJS_BPF) $(KERN_USER_H) $(EXTRA_DEPS)
 	$(CC) -Wall $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON_OBJS_BPF) \
-	# $< 
-	$(LIBS)
+	$< $(LIBS) $(LDLIBS_AVB)
 
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
@@ -81,14 +76,6 @@ clean:
 
 # For build dependency on this file, if it gets updated
 COMMON_MK_BPF = $(COMMON_DIR_BPF)/common.mk
-
-llvm-check: $(CLANG) $(LLC)
-	@for TOOL in $^ ; do \
-		if [ ! $$(command -v $${TOOL} 2>/dev/null) ]; then \
-			echo "*** ERROR: Cannot find tool $${TOOL}" ;\
-			exit 1; \
-		else true; fi; \
-	done
 
 $(OBJECT_LIBBPF):
 	@if [ ! -d $(LIBBPF_DIR) ]; then \
