@@ -32,7 +32,6 @@ CFLAGS += -I/usr/include/x86_64-linux-gnu
 CFLAGS += -I../headers/
 LDFLAGS ?= -L$(LIBBPF_DIR)
 
-LIBS = -l:libbpf.a -lelf $(USER_LIBS)
 
 
 MRPCLIENT_DIR = ../../common
@@ -47,6 +46,7 @@ CFLAGS_AVB = $(OPT) $(WARN) -std=gnu99
 CPPFLAGS_AVB = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
 LDLIBS_AVB = -ljack -lpthread
 
+LIBS = -l:libbpf.a -lelf $(LDLIBS_AVB)
 
 
 all: jack_listener llvm-check  $(XDP_OBJ)
@@ -56,7 +56,8 @@ jack_listener: jack_listener.o avb_sockets.o $(MRPLISTENER_TARGETS) xdp_load_and
 
 jack_listener.o: jack_listener.c avb_sockets.c xdp_load_and_stats.c $(OBJECT_LIBBPF) Makefile $(COMMON_MK_BPF) $(COMMON_OBJS_BPF) $(KERN_USER_H) $(EXTRA_DEPS)
 	$(CC) -Wall $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON_OBJS_BPF) \
-	 $< $(LIBS)
+	# $< 
+	$(LIBS)
 
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
