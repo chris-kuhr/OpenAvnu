@@ -1,7 +1,4 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-static const char *__doc__ = "XDP loader and stats program\n"
-	" - Allows selecting BPF section --progsec name to XDP-attach to --dev\n";
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,9 +22,6 @@ static const char *__doc__ = "XDP loader and stats program\n"
 
 #include "xdp_load_and_stats.h"
 
-#define MAX_SAMPLE_VALUE ((1U << ((sizeof(int)*8)-1))-1)
-static const char *default_filename = "xdp_avb_kern.o";
-static const char *default_progsec = "xdp_avtp";
 
 static const struct option_wrapper long_options[] = {
 	{{"help",        no_argument,		NULL, 'h' },

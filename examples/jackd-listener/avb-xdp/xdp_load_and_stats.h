@@ -25,6 +25,10 @@ static const char *__doc__ = "XDP loader and stats program\n"
 
 #define MAX_SAMPLE_VALUE ((1U << ((sizeof(int)*8)-1))-1)
 
+static const char *default_filename = "xdp_avb_kern.o";
+static const char *default_progsec = "xdp_avtp";
+
+
 int find_map_fd(struct bpf_object *bpf_obj, const char *mapname);
 
 struct record {
