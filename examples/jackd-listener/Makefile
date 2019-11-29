@@ -28,8 +28,8 @@ USER_C := ${USER_TARGETS:=.c}
 USER_OBJ := ${USER_C:.c=.o}
 
 # Expect this is defined by including Makefile, but define if not
-COMMON_DIR = common/
-LIBBPF_DIR = libbpf/src/
+COMMON_DIR = ./common
+LIBBPF_DIR = ./libbpf/src
 
 OBJECT_LIBBPF = $(LIBBPF_DIR)/libbpf.a
 # Extend if including Makefile already added some
@@ -80,8 +80,8 @@ $(COMMON_OBJS): %.o: %.h
 
 
 
-$(USER_TARGETS): %: %.c  $(OBJECT_LIBBPF) Makefile $(COMMON_MK) avb_sockets.o $(MRPLISTENER_TARGETS) $(COMMON_OBJS) $(KERN_USER_H) 
-	$(CC) -Wall $(CFLAGS_BPF) $(LDFLAGS_BPF) -o $@ $(COMMON_OBJS) \
+$(USER_TARGETS): %: %.c  $(OBJECT_LIBBPF) Makefile $(COMMON_MK) avb_sockets.c $(COMMON_OBJS) $(KERN_USER_H) 
+	$(CC) -Wall $(CFLAGS_BPF) $(LDFLAGS_BPF) -o $@ $(COMMON_OBJS) avb_sockets.o $(MRPLISTENER_TARGETS) \
 	 $< $(LIBS_BPF)
 
 	 
