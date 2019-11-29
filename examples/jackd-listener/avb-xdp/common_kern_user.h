@@ -4,10 +4,15 @@
 #ifndef __COMMON_KERN_USER_H
 #define __COMMON_KERN_USER_H
 
+#define AUDIO_CHANNELS 8
+#define SAMPLEBUF_SIZE 128
+
 /* This is the data record stored in the map */
-struct datarec {
-	__u64 rx_packets;
-	__u64 rx_bytes;
+struct datarec{
+	__u64 accu_rx_timestamp;
+	__u32 rx_pkt_cnt;
+	int sampleCounter;
+	int sampleBuffer[AUDIO_CHANNELS][SAMPLEBUF_SIZE*2];//+SAMPLEBUF_SIZE/4];
 };
 
 #ifndef XDP_ACTION_MAX
