@@ -77,7 +77,7 @@ $(COMMON_OBJS): %.o: %.h
 #%.o: %.c $(OBJECT_LIBBPF) Makefile $(COMMON_MK) $(COMMON_OBJS) $(KERN_USER_H)  
 
 $(USER_TARGETS): 
-	$(CC) -Wall $(CFLAGS) $(LDFLAGS) -o $@ $(MRPLISTENER_TARGETS) jackd_listener.c  avb_sockets.c   $(COMMON_OBJS) $(LIBS) 
+	$(CC) -Wall $(CFLAGS) $(LDFLAGS) -o $@ jackd_listener.c  avb_sockets.c  $(MRPLISTENER_TARGETS) $(COMMON_OBJS) $(LIBS) 
 
 	 
 	 
