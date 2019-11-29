@@ -58,7 +58,7 @@ $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	$(CC) $^ $(LDLIBS) -o $@
 
 
-$(XDP_OBJ): %.o: %.c  Makefile $(COMMON_MK) $(COMMON_DIR)/common_kern_user.h
+$(XDP_OBJ): %.o: %.c  Makefile $(COMMON_MK)
 	$(CLANG) -S \
 	    -target bpf \
 	    -D __BPF_TRACING__ \
