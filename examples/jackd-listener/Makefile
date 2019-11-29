@@ -61,7 +61,7 @@ all: $(XDP_OBJ) loader $(USER_TARGETS)
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
 
-avb_sockets.c: %.o
+avb_sockets.o: %.c
 	$(CC) $^ $(LDLIBS) -o $@
 
 
@@ -112,7 +112,6 @@ $(XDP_OBJ): %.o: %.c  Makefile $(COMMON_MK)
 
 	
 clean:
+	make -C loader clean
 	$(RM) jack_listener
 	$(RM) `find . -name "*~" -o -name "*.[oa]" -o -name "\#*\#" -o -name TAGS -o -name core -o -name "*.orig"`
-	make -C loader clean
-	make -C $(XDP_OBJ) clean
