@@ -42,10 +42,10 @@ CFLAGS_BPF += -I./headers/
 LDFLAGS_BPF = -L$(LIBBPF_DIR)
 
 
-.PHONY: clean loader avb_xdp
+.PHONY: clean loader $(XDP_OBJ)
 
 
-all: avb_xdp loader jack_listener 
+all: $(XDP_OBJ) loader jack_listener 
 
 jack_listener: jack_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
 
@@ -58,7 +58,7 @@ $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	$(CC) $^ $(LDLIBS) -o $@
 
 
-avb_xdp: %.o: %.c  Makefile $(COMMON_MK) $(COMMON_DIR)/common_kern_user.h
+$(XDP_OBJ): %.o: %.c  Makefile $(COMMON_MK) $(COMMON_DIR)/common_kern_user.h
 	$(CLANG) -S \
 	    -target bpf \
 	    -D __BPF_TRACING__ \
@@ -78,4 +78,4 @@ clean:
 	$(RM) jack_listener
 	$(RM) `find . -name "*~" -o -name "*.[oa]" -o -name "\#*\#" -o -name TAGS -o -name core -o -name "*.orig"`
 	make -C loader clean
-	make -C avb_xdp clean
+	make -C $(XDP_OBJ) clean
