@@ -13,15 +13,6 @@ MRPLISTENER_TARGETS = $(addprefix $(MRPCLIENT_DIR)/,$(MRPLISTENER_OBJS))
 
 DAEMONS_DIR = ../../daemons
 
-OPT = -O2 -g
-WARN = -Wall -Wextra -Wno-parentheses
-CFLAGS = $(OPT) $(WARN) -std=gnu99
-CPPFLAGS = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
-LDLIBS = -ljack -lpthread
-
-
-
-
 XDP_C = ${XDP_TARGETS:=.c}
 XDP_OBJ = ${XDP_C:.c=.o}
 USER_C := ${USER_TARGETS:=.c}
@@ -42,12 +33,16 @@ COMMON_MK = $(COMMON_DIR)/common.mk
 # BPF-prog kern and userspace shares struct via header file:
 KERN_USER_H = common_kern_user.h
 
+OPT = -O2 -g
+WARN = -Wall -Wextra -Wno-parentheses
 CFLAGS_BPF = -I$(LIBBPF_DIR)/build/usr/include/ -g
 # Extra include for Ubuntu issue #44
 CFLAGS_BPF += -I/usr/include/x86_64-linux-gnu
 CFLAGS_BPF += -I./headers/
-LDFLAGS_BPF = -L$(LIBBPF_DIR)
-LIBS_BPF = -l:libbpf.a -lelf
+CFLAGS = $(OPT) $(WARN) $(CFLAGS_BPF)-std=gnu99
+LDFLAGS = -L$(LIBBPF_DIR)
+CPPFLAGS = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
+LIBS = -l:libbpf.a -lelf -ljack -lpthread
 
 
 .PHONY: clean loader $(XDP_OBJ)
@@ -81,8 +76,8 @@ $(COMMON_OBJS): %.o: %.h
 
 
 $(USER_TARGETS): %: %.c avb_sockets.c  $(OBJECT_LIBBPF) Makefile $(COMMON_MK) $(COMMON_OBJS) $(KERN_USER_H) 
-	$(CC) -Wall $(CFLAGS_BPF) $(LDFLAGS_BPF) $(LDLIBS) -o $@ avb_sockets.o $(MRPLISTENER_TARGETS) $(COMMON_OBJS) \
-	 $< $(LIBS_BPF) $(LDLIBS)
+	$(CC) -Wall $(CFLAGS) $(LDFLAGS) -o $@ avb_sockets.o $(MRPLISTENER_TARGETS) $(COMMON_OBJS) \
+	 $< $(LIBS)
 
 	 
 	 
