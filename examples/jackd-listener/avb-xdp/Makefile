@@ -2,7 +2,6 @@
 
 # Departing from the implicit _user.c scheme
 XDP_TARGETS  := xdp_avb_kern
-USER_TARGETS := jack_listener
 
 LIBBPF_DIR = ../libbpf/src/
 COMMON_DIR_BPF = ../common/
@@ -13,8 +12,6 @@ CC ?= gcc
 
 XDP_C = ${XDP_TARGETS:=.c}
 XDP_OBJ = ${XDP_C:.c=.o}
-USER_C := ${USER_TARGETS:=.c}
-USER_OBJ := ${USER_C:.c=.o}
 
 OBJECT_LIBBPF = $(LIBBPF_DIR)/libbpf.a
 
@@ -55,9 +52,11 @@ LDLIBS_AVB = -ljack -lpthread
 all: jack_listener llvm-check  $(XDP_OBJ)
 
 
-jack_listener: jack_listener.o avb_sockets.o $(MRPLISTENER_TARGETS) $(USER_TARGETS)
+jack_listener: jack_listener.o avb_sockets.o $(MRPLISTENER_TARGETS) xdp_load_and_stats.o
 
-jack_listener.o: jack_listener.c avb_sockets.c $(USER_TARGETS)
+jack_listener.o: jack_listener.c avb_sockets.c xdp_load_and_stats.c $(OBJECT_LIBBPF) Makefile $(COMMON_MK_BPF) $(COMMON_OBJS_BPF) $(KERN_USER_H) $(EXTRA_DEPS)
+	$(CC) -Wall $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON_OBJS_BPF) \
+	 $< $(LIBS)
 
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
@@ -73,7 +72,7 @@ clean:
 	rm -rf $(LIBBPF_DIR)/build
 	$(MAKE) -C $(LIBBPF_DIR) clean
 	$(MAKE) -C $(COMMON_DIR_BPF) clean
-	rm -f $(USER_TARGETS) $(XDP_OBJ) $(USER_OBJ)$(RM) jack_listener
+	rm -f $(XDP_OBJ) $(USER_OBJ)
 	$(RM) jack_listener
 	$(RM) `find . -name "*~" -o -name "*.[oa]" -o -name "\#*\#" -o -name TAGS -o -name core -o -name "*.orig"`
 	rm -f *.ll
@@ -108,10 +107,6 @@ $(COMMON_H_BPF): %.h: %.c
 # Detect if any of common obj changed and create dependency on .h-files
 $(COMMON_OBJS_BPF): %.o: %.h
 	make -C $(COMMON_DIR_BPF)
-
-$(USER_TARGETS): %: %.c  $(OBJECT_LIBBPF) Makefile $(COMMON_MK_BPF) $(COMMON_OBJS_BPF) $(KERN_USER_H) $(EXTRA_DEPS)
-	$(CC) -Wall $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON_OBJS_BPF) \
-	 $< $(LIBS)
 
 $(XDP_OBJ): %.o: %.c  Makefile $(COMMON_MK_BPF) $(KERN_USER_H) $(EXTRA_DEPS)
 	$(CLANG) -S \

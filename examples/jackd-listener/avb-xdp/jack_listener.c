@@ -35,7 +35,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
 
-#include "../common/listener_mrp_client.h"
+#include "listener_mrp_client.h"
 
 
 #include "xdp_load_and_stats.h"
