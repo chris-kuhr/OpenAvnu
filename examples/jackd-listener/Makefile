@@ -5,6 +5,7 @@ MRPLISTENER_TARGETS = $(addprefix $(MRPCLIENT_DIR)/,$(MRPLISTENER_OBJS))
 LOADER = loader
 LOADER_CLEAN = $(addsuffix _clean,$(LOADER))
 
+
 DAEMONS_DIR = ../../daemons
 
 OPT = -O2 -g
@@ -12,6 +13,8 @@ WARN = -Wall -Wextra -Wno-parentheses
 CFLAGS = $(OPT) $(WARN) -std=gnu99
 CPPFLAGS = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
 LDLIBS = -ljack -lpthread
+
+.PHONY: clean $(LOADER) $(LOADER_CLEAN)
 
 
 all: $(LOADER) jack_listener 
