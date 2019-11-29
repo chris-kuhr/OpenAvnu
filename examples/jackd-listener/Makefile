@@ -11,7 +11,8 @@ CPPFLAGS = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
 LDLIBS = -ljack -lpthread
 
 
-all: jack_listener
+
+all: jack_listener loader
 
 jack_listener: jack_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
 
