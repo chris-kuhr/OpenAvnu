@@ -2,7 +2,7 @@
 
 # Departing from the implicit _user.c scheme
 XDP_TARGETS  := xdp_avb_kern
-USER_TARGETS := xdp_load_and_stats
+USER_TARGETS := jack_listener
 
 LIBBPF_DIR = ../libbpf/src/
 COMMON_DIR_BPF = ../common/
