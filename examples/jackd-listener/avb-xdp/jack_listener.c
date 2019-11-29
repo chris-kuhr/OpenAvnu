@@ -38,6 +38,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "listener_mrp_client.h"
 
 
+#include "xdp_load_and_stats.h"
+
 #define VERSION_STR "1.1"
 
 #define ETHERNET_HEADER_SIZE (18)

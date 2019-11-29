@@ -23,6 +23,8 @@ static const char *__doc__ = "XDP loader and stats program\n"
 #include "common_kern_user.h"
 #include "bpf_util.h" /* bpf_num_possible_cpus */
 
+#include "xdp_load_and_stats.h"
+
 #define MAX_SAMPLE_VALUE ((1U << ((sizeof(int)*8)-1))-1)
 static const char *default_filename = "xdp_avb_kern.o";
 static const char *default_progsec = "xdp_avtp";
@@ -79,14 +81,6 @@ static __u64 gettime(void)
 	return (__u64) t.tv_sec * NANOSEC_PER_SEC + t.tv_nsec;
 }
 
-struct record {
-	__u64 timestamp;
-	struct datarec total;
-};
-
-struct stats_record {
-	struct record stats[1];
-};
 
 static double calc_period(struct record *r, struct record *p)
 {
