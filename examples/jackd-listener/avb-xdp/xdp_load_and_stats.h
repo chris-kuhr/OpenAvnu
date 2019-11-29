@@ -42,15 +42,15 @@ void map_get_value_array(int fd, __u32 key, struct datarec *value);
 /* BPF_MAP_TYPE_PERCPU_ARRAY */
 void map_get_value_percpu_array(int fd, __u32 key, struct datarec *value);
 
-bool map_collect(int fd, __u32 map_type, __u32 key, struct record *rec);
+static bool map_collect(int fd, __u32 map_type, __u32 key, struct record *rec);
 
 
-void stats_collect(int map_fd, __u32 map_type,
+static void stats_collect(int map_fd, __u32 map_type,
 			  struct stats_record *stats_rec);
 
-void stats_poll(int map_fd, __u32 map_type, int interval);
+static void stats_poll(int map_fd, __u32 map_type, int interval);
 
-int __check_map_fd_info(int map_fd, struct bpf_map_info *info,
+static int __check_map_fd_info(int map_fd, struct bpf_map_info *info,
 			       struct bpf_map_info *exp);
 
 int load_ebpf(int argc, char **argv);
