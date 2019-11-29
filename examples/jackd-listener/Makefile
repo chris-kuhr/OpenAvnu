@@ -1,5 +1,5 @@
 XDP_TARGETS  := xdp_avb_kern
-USER_TARGETS := 
+USER_TARGETS := jackd_listener
 
 LLC = llc
 CLANG = clang
@@ -32,14 +32,22 @@ COMMON_DIR = common/
 LIBBPF_DIR = libbpf/src/
 
 OBJECT_LIBBPF = $(LIBBPF_DIR)/libbpf.a
+# Extend if including Makefile already added some
+COMMON_OBJS += $(COMMON_DIR)/common_params.o $(COMMON_DIR)/common_user_bpf_xdp.o
+# Create expansions for dependencies
+COMMON_H := ${COMMON_OBJS:.o=.h}
 # For build dependency on this file, if it gets updated
 COMMON_MK = $(COMMON_DIR)/common.mk
+
+# BPF-prog kern and userspace shares struct via header file:
+KERN_USER_H = common_kern_user.h
 
 CFLAGS_BPF = -I$(LIBBPF_DIR)/build/usr/include/ -g
 # Extra include for Ubuntu issue #44
 CFLAGS_BPF += -I/usr/include/x86_64-linux-gnu
 CFLAGS_BPF += -I./headers/
 LDFLAGS_BPF = -L$(LIBBPF_DIR)
+LIBS_BPF = -l:libbpf.a -lelf
 
 
 .PHONY: clean loader $(XDP_OBJ)
@@ -57,6 +65,38 @@ $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	$(CC) $^ $(LDLIBS) -o $@
 
 
+loader:
+	make -C loader
+
+
+# Create dependency: detect if C-file change and touch H-file, to trigger
+# target $(COMMON_OBJS)
+$(COMMON_H): %.h: %.c
+	touch $@
+
+# Detect if any of common obj changed and create dependency on .h-files
+$(COMMON_OBJS): %.o: %.h
+	make -C $(COMMON_DIR)
+
+
+
+$(USER_TARGETS): %: %.c  $(OBJECT_LIBBPF) Makefile $(COMMON_MK) $(COMMON_OBJS) $(KERN_USER_H) 
+	$(CC) -Wall $(CFLAGS_BPF) $(LDFLAGS_BPF) -o $@ $(COMMON_OBJS) \
+	 $< $(LIBS_BPF)
+
+	 
+	 
+$(OBJECT_LIBBPF):
+	@if [ ! -d $(LIBBPF_DIR) ]; then \
+		echo "Error: Need libbpf submodule"; \
+		echo "May need to run git submodule update --init"; \
+		exit 1; \
+	else \
+		cd $(LIBBPF_DIR) && $(MAKE) all; \
+		mkdir -p build; DESTDIR=build $(MAKE) install_headers; \
+	fi
+	
+
 $(XDP_OBJ): %.o: %.c  Makefile $(COMMON_MK)
 	$(CLANG) -S \
 	    -target bpf \
@@ -70,8 +110,6 @@ $(XDP_OBJ): %.o: %.c  Makefile $(COMMON_MK)
 	    -O2 -emit-llvm -c -g -o ${@:.o=.ll} $<
 	$(LLC) -march=bpf -filetype=obj -o $@ ${@:.o=.ll}
 
-loader:
-	make -C loader
 	
 clean:
 	$(RM) jack_listener
