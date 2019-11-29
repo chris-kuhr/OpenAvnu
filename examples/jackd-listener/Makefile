@@ -2,9 +2,6 @@ MRPCLIENT_DIR = ../common
 MRPLISTENER_OBJS = listener_mrp_client.o
 MRPLISTENER_TARGETS = $(addprefix $(MRPCLIENT_DIR)/,$(MRPLISTENER_OBJS))
 
-LOADER = loader
-LOADER_CLEAN = $(addsuffix _clean,$(LOADER))
-
 
 DAEMONS_DIR = ../../daemons
 
@@ -14,10 +11,10 @@ CFLAGS = $(OPT) $(WARN) -std=gnu99
 CPPFLAGS = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
 LDLIBS = -ljack -lpthread
 
-.PHONY: clean $(LOADER) $(LOADER_CLEAN)
+.PHONY: clean loader
 
 
-all: $(LOADER) jack_listener 
+all: loader jack_listener 
 
 jack_listener: jack_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
 
@@ -30,14 +27,10 @@ $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	$(CC) $^ $(LDLIBS) -o $@
 
 
-$(LOADER):
-	make -C $@
-
-$(LOADER_CLEAN):
-	make -C $(subst _clean,,$@) clean
+loader:
+	make -C loader
 	
-
 clean:
 	$(RM) jack_listener
 	$(RM) `find . -name "*~" -o -name "*.[oa]" -o -name "\#*\#" -o -name TAGS -o -name core -o -name "*.orig"`
-	$(LOADER_CLEAN)
+	make -C loader clean
