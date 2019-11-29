@@ -4,11 +4,11 @@ MRPLISTENER_TARGETS = $(addprefix $(MRPCLIENT_DIR)/,$(MRPLISTENER_OBJS))
 
 DAEMONS_DIR = ../../daemons
 
-OPT_AVB = -O2 -g
-WARN_AVB = -Wall -Wextra -Wno-parentheses
-CFLAGS_AVB = $(OPT) $(WARN) -std=gnu99
-CPPFLAGS_AVB = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
-LDLIBS_AVB = -ljack -lpthread
+OPT = -O2 -g
+WARN = -Wall -Wextra -Wno-parentheses
+CFLAGS = $(OPT) $(WARN) -std=gnu99
+CPPFLAGS = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
+LDLIBS = -ljack -lpthread
 
 
 all: jack_listener
@@ -21,7 +21,7 @@ $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
 
 %: %.o
-	$(CC) $^ $(LDLIBS_AVB) -o $@
+	$(CC) $^ $(LDLIBS) -o $@
 
 clean:
 	$(RM) jack_listener
