@@ -52,7 +52,7 @@ LIBS_BPF = -l:libbpf.a -lelf
 
 .PHONY: clean loader $(XDP_OBJ)
 
-all: $(XDP_OBJ) loader avb_sockets.o $(USER_TARGETS) 
+all: $(XDP_OBJ) loader $(USER_TARGETS) 
 
 #jackd_listener: jackd_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
 #
@@ -61,8 +61,8 @@ all: $(XDP_OBJ) loader avb_sockets.o $(USER_TARGETS)
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
 
-avb_sockets.o: 
-	$(CC) $^ $(LDLIBS) -o $@
+#avb_sockets.o: 
+#	$(CC) $^ $(LDLIBS) -o $@
 
 
 loader:
@@ -80,9 +80,9 @@ $(COMMON_OBJS): %.o: %.h
 
 
 
-$(USER_TARGETS): %: %.c  $(OBJECT_LIBBPF) Makefile $(COMMON_MK) avb_sockets.c $(COMMON_OBJS) $(KERN_USER_H) 
-	$(CC) -Wall $(CFLAGS_BPF) $(LDFLAGS_BPF) -o $@ $(COMMON_OBJS) avb_sockets.o $(MRPLISTENER_TARGETS) \
-	 $< $(LIBS_BPF)
+$(USER_TARGETS): %: %.c avb_sockets.c  $(OBJECT_LIBBPF) Makefile $(COMMON_MK) $(COMMON_OBJS) $(KERN_USER_H) 
+	$(CC) -Wall $(CFLAGS_BPF) $(LDFLAGS_BPF) $(LDLIBS) -o $@ avb_sockets.o $(MRPLISTENER_TARGETS) $(COMMON_OBJS) \
+	 $< $(LIBS_BPF) $(LDLIBS)
 
 	 
 	 
