@@ -48,11 +48,11 @@ LIBS = -l:libbpf.a -lelf
 all: jack_listener
 
 
-jack_listener: jack_listener.o avb_sockets.o listener_mrp_client.o xdp_load_and_stats.o $(XDP_OBJ) 
+jack_listener: jack_listener.o avb_sockets.o listener_mrp_client.o xdp_load_and_stats.o $(XDP_OBJ) \
+	$< $(LIBS) $(LDLIBS_AVB)
 
 jack_listener.o: jack_listener.c avb_sockets.c xdp_load_and_stats.c $(OBJECT_LIBBPF) Makefile $(COMMON_MK_BPF) $(COMMON_OBJS_BPF) $(KERN_USER_H) $(EXTRA_DEPS)
-	$(CC) -Wall $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON_OBJS_BPF) \
-	$< $(LIBS) $(LDLIBS_AVB)
+	$(CC) -Wall $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON_OBJS_BPF) 
 
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
