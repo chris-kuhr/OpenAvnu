@@ -52,7 +52,7 @@ LIBS_BPF = -l:libbpf.a -lelf
 
 .PHONY: clean loader $(XDP_OBJ)
 
-all: $(XDP_OBJ) loader $(USER_TARGETS) 
+all: $(XDP_OBJ) loader avb_sockets.o $(USER_TARGETS) 
 
 #jackd_listener: jackd_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
 #
