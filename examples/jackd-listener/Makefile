@@ -61,7 +61,7 @@ all: $(XDP_OBJ) loader avb_sockets.o $(USER_TARGETS)
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
 
-avb_sockets.o: %.c
+avb_sockets.o: 
 	$(CC) $^ $(LDLIBS) -o $@
 
 
