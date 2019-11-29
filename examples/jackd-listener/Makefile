@@ -49,16 +49,8 @@ LIBS = -l:libbpf.a -lelf -ljack -lpthread
 
 all: $(XDP_OBJ) loader $(USER_TARGETS) 
 
-#jackd_listener: jackd_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
-#
-#jackd_listener.o: jackd_listener.c avb_sockets.c
-
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
-
-#avb_sockets.o: 
-#	$(CC) $^ $(LDLIBS) -o $@
-
 
 loader:
 	make -C loader
