@@ -35,6 +35,17 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
 
+#include <bpf/bpf.h>
+#include <bpf/libbpf.h>
+
+#include <net/if.h>
+#include <linux/if_link.h> /* depend on kernel-headers installed */
+
+#include "../common/common_params.h"
+#include "../common/common_user_bpf_xdp.h"
+#include "common_kern_user.h"
+#include "bpf_util.h" /* bpf_num_possible_cpus */
+
 #include "listener_mrp_client.h"
 
 
@@ -57,6 +68,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define DEFAULT_RINGBUFFER_SIZE (32768)
 #define MAX_SAMPLE_VALUE ((1U << ((sizeof(int32_t) * 8) -1)) -1)
 
+#define AVB_XDP
+
 struct mrp_listener_ctx *ctx_sig;//Context pointer for signal handler
 
 struct ethernet_header{
@@ -70,6 +83,18 @@ struct ethernet_header{
 
 static const char *version_str = "jack_listener v" VERSION_STR "\n"
     "Copyright (c) 2013, Katja Rohloff, Copyright (c) 2019, Christoph Kuhr\n";
+
+#ifdef AVB_XDP
+struct record {
+	__u64 timestamp;
+	struct datarec total; /* defined in common_kern_user.h */
+};
+
+struct stats_record {
+	struct record stats[1]; /* Assignment#2: Hint */
+};
+#endif // AVB_XDP
+
 
 
 #ifdef USE_PCAP
@@ -87,6 +112,121 @@ unsigned char glob_stream_id[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 /* IEEE 1722 reserved address */
 unsigned char glob_dest_addr[] = { 0x91, 0xE0, 0xF0, 0x00, 0x0e, 0x80 };
 struct pollfd *avtp_transport_socket_fds;
+
+
+#ifdef AVB_XDP
+int find_map_fd(struct bpf_object *bpf_obj, const char *mapname)
+{
+	struct bpf_map *map;
+	int map_fd = -1;
+
+	/* Lesson#3: bpf_object to bpf_map */
+	map = bpf_object__find_map_by_name(bpf_obj, mapname);
+        if (!map) {
+		fprintf(stderr, "ERR: cannot find map by name: %s\n", mapname);
+		goto out;
+	}
+
+	map_fd = bpf_map__fd(map);
+ out:
+	return map_fd;
+}
+
+/* BPF_MAP_TYPE_ARRAY */
+void map_get_value_array(int fd, __u32 key, struct datarec *value)
+{
+	if ((bpf_map_lookup_elem(fd, &key, value)) != 0) {
+		fprintf(stderr,
+			"ERR: bpf_map_lookup_elem failed key:0x%X\n", key);
+	}
+}
+
+/* BPF_MAP_TYPE_PERCPU_ARRAY */
+void map_get_value_percpu_array(int fd, __u32 key, struct datarec *value)
+{
+	/* For percpu maps, userspace gets a value per possible CPU */
+	// unsigned int nr_cpus = bpf_num_possible_cpus();
+	// struct datarec values[nr_cpus];
+
+	fprintf(stderr, "ERR: %s() not impl. see assignment#3", __func__);
+}
+
+static bool map_collect(int fd, __u32 map_type, __u32 key, struct record *rec)
+{
+	struct datarec value;
+
+	/* Get time as close as possible to reading map contents */
+	rec->timestamp = gettime();
+
+	switch (map_type) {
+	case BPF_MAP_TYPE_ARRAY:
+		map_get_value_array(fd, key, &value);
+		break;
+	case BPF_MAP_TYPE_PERCPU_ARRAY:
+		/* fall-through */
+	default:
+		fprintf(stderr, "ERR: Unknown map_type(%u) cannot handle\n",
+			map_type);
+		return false;
+		break;
+	}
+
+	/* Assignment#1: Add byte counters */
+	rec->total.rx_packets = value.rx_packets;
+	return true;
+}
+
+/* Lesson#4: It is userspace responsibility to known what map it is reading and
+ * know the value size. Here get bpf_map_info and check if it match our expected
+ * values.
+ */
+static int __check_map_fd_info(int map_fd, struct bpf_map_info *info,
+			       struct bpf_map_info *exp)
+{
+	__u32 info_len = sizeof(*info);
+	int err;
+
+	if (map_fd < 0)
+		return EXIT_FAIL;
+
+        /* BPF-info via bpf-syscall */
+	err = bpf_obj_get_info_by_fd(map_fd, info, &info_len);
+	if (err) {
+		fprintf(stderr, "ERR: %s() can't get info - %s\n",
+			__func__,  strerror(errno));
+		return EXIT_FAIL_BPF;
+	}
+
+	if (exp->key_size && exp->key_size != info->key_size) {
+		fprintf(stderr, "ERR: %s() "
+			"Map key size(%d) mismatch expected size(%d)\n",
+			__func__, info->key_size, exp->key_size);
+		return EXIT_FAIL;
+	}
+	if (exp->value_size && exp->value_size != info->value_size) {
+		fprintf(stderr, "ERR: %s() "
+			"Map value size(%d) mismatch expected size(%d)\n",
+			__func__, info->value_size, exp->value_size);
+		return EXIT_FAIL;
+	}
+	if (exp->max_entries && exp->max_entries != info->max_entries) {
+		fprintf(stderr, "ERR: %s() "
+			"Map max_entries(%d) mismatch expected size(%d)\n",
+			__func__, info->max_entries, exp->max_entries);
+		return EXIT_FAIL;
+	}
+	if (exp->type && exp->type  != info->type) {
+		fprintf(stderr, "ERR: %s() "
+			"Map type(%d) mismatch expected type(%d)\n",
+			__func__, info->type, exp->type);
+		return EXIT_FAIL;
+	}
+
+	return 0;
+}
+#endif // AVB_XDP
+
+
 
 
 static void help()
@@ -249,6 +389,38 @@ int receive_avtp_packet(  )
         fprintf(stdout, "Error recvmsg: %d %d %s\n", status, errno, strerror(errno));fflush(stdout);
         return -1;
     }
+
+#ifdef AVB_XDP
+
+//    mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
+//    memcpy(&frame[0], &record_stats[i], sizeof(frame));
+//
+//    for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {
+//        for(int j = 0; j < CHANNELS; j++) {
+//
+//            frame[j] = ntohl(frame[j]);   /* convert to host-byte order */
+//            frame[j] &= 0x00ffffff;       /* ignore leading label */
+//            frame[j] <<= 8;               /* left-align remaining PCM-24 sample */
+//
+//            jackframe[j] = ((int32_t)frame[j])/(float)(MAX_SAMPLE_VALUE);
+//        }
+//
+//        if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
+//            jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
+////			fprintf(stdout, "Wrote %d bytes after %i samples.\n", SAMPLE_SIZE * CHANNELS, total);
+//        } else {
+//            fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
+//        }
+//
+//        if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
+//            /** Ringbuffer has only 25% or less write space available, it's time to tell jackd
+//            to read some data. */
+//            ready = 1;
+//        }
+//    }
+
+#else
+#endif // AVB_XDP
     if( // Compare Stream IDs
         (glob_stream_id[0] == (uint8_t) stream_packet[18]) &&
         (glob_stream_id[1] == (uint8_t) stream_packet[19]) &&
@@ -259,6 +431,26 @@ int receive_avtp_packet(  )
         (glob_stream_id[6] == (uint8_t) stream_packet[24]) &&
         (glob_stream_id[7] == (uint8_t) stream_packet[25])
     ){
+
+        uint64_t packet_arrival_time_ns = 0;
+           // Packet Arrival Time from Device
+        cmsg = CMSG_FIRSTHDR(&msg);
+        while( cmsg != NULL ) {
+            if( cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMPING ) {
+                struct timespec *ts_device, *ts_system;
+                ts_system = ((struct timespec *) CMSG_DATA(cmsg)) + 1;
+                ts_device = ts_system + 1;
+                packet_arrival_time_ns =  (ts_device->tv_sec*1000000000LL + ts_device->tv_nsec);
+                if( ts_cnt < NUM_TS )
+                    timestamps[ts_cnt++] = packet_arrival_time_ns;
+                break;
+            }
+            cmsg = CMSG_NXTHDR(&msg,cmsg);
+        }
+        fprintf(stdout, "Rx Timestamp %x \nn", packet_arrival_time_ns);
+
+
+
         mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
 
         for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {
@@ -289,6 +481,7 @@ int receive_avtp_packet(  )
 
         }
     }
+//#endif // AVB_XDP
     return 0;
 }
 
@@ -396,13 +589,82 @@ jack_client_t* init_jack(struct mrp_listener_ctx *ctx)
 }
 
 
+
+
 int main(int argc, char *argv[])
 {
 	char* dev = NULL;
 	int dstStreamUId = -1;
 	int dstEndpointId = -1;
 
+#ifdef AVB_XDP
+	struct stats_record prev, record = { 0 };
+	struct bpf_map_info map_expect = { 0 };
+	struct bpf_map_info info = { 0 };
+	struct bpf_object *bpf_obj;
+	int stats_map_fd;
+	int interval = 2;
+	int err;
 
+//
+//	struct config cfg = {
+//		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_DRV_MODE,
+//		.ifindex   = -1,
+//		.do_unload = false,
+//	};
+//
+//	struct config cfg = {
+//		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_DRV_MODE,
+//		.ifindex   = -1,
+//		.do_unload = false,
+//	};
+//	/* Set default BPF-ELF object file and BPF program name */
+//	strncpy(cfg.filename, default_filename, sizeof(cfg.filename));
+//	strncpy(cfg.progsec,  default_progsec,  sizeof(cfg.progsec));
+//	/* Cmdline options can change progsec */
+//	parse_cmdline_args(argc, argv, long_options, &cfg, __doc__);
+//
+//	/* Required option */
+//	if (cfg.ifindex == -1) {
+//		fprintf(stderr, "ERR: required option --dev missing\n");
+//		usage(argv[0], __doc__, long_options, (argc == 1));
+//		return EXIT_FAIL_OPTION;
+//	}
+//	if (cfg.do_unload)
+//		return xdp_link_detach(cfg.ifindex, cfg.xdp_flags, 0);
+//
+//	bpf_obj = load_bpf_and_xdp_attach(&cfg);
+//	if (!bpf_obj)
+//		return EXIT_FAIL_BPF;
+
+
+	/* Locate map file descriptor */
+	stats_map_fd = find_map_fd(bpf_obj, "xdp_stats_map");
+	if (stats_map_fd < 0) {
+		xdp_link_detach(cfg.ifindex, cfg.xdp_flags, 0);
+		return EXIT_FAIL_BPF;
+	}
+
+	/* check map info, e.g. datarec is expected size */
+	map_expect.key_size    = sizeof(__u32);
+	map_expect.value_size  = sizeof(struct datarec);
+	map_expect.max_entries = XDP_ACTION_MAX;
+	err = __check_map_fd_info(stats_map_fd, &info, &map_expect);
+	if (err) {
+		fprintf(stderr, "ERR: map via FD not compatible\n");
+		return err;
+	}
+	if (verbose) {
+		printf("\nCollecting stats from BPF map\n");
+		printf(" - BPF map (bpf_map_type:%d) id:%d name:%s"
+		       " key_size:%d value_size:%d max_entries:%d\n",
+		       info.type, info.id, info.name,
+		       info.key_size, info.value_size, info.max_entries
+		       );
+	}
+
+
+#endif
 
 #ifdef USE_PCAP
 	char errbuf[PCAP_ERRBUF_SIZE];
@@ -588,9 +850,39 @@ int main(int argc, char *argv[])
 	pcap_loop(handle, -1, pcap_callback, (u_char*)ctx);
 #else
 
+#ifdef AVB_XDP
+    /* Assignment#2: Collect other XDP actions stats  */
+    __u32 key = XDP_PASS;
+    map_collect(map_fd, map_type, key, &stats_rec->stats[0]);
+
+
     while(!ctx->halt_tx){
+
+        receive_avtp_packet();
+
+		prev = record; /* struct copy */
+        /* Assignment#2: Collect other XDP actions stats  */
+        __u32 key = XDP_PASS;
+        map_collect(map_fd, map_type, key, &stats_rec->stats[0]);
+
+        struct record *rec, *prev;
+        const char *action = action2str(XDP_PASS);
+		rec  = &stats_rec->stats[0];
+		prev = &stats_prev->stats[0];
+
+		int64_t diff = rec->total.rx_pkt_cnt - prev->total.rx_pkt_cnt;
+    }
+#else
+
+
+    while(!ctx->halt_tx){
+
         receive_avtp_packet();
     }
+
+#endif
+
+
 
 
 #endif // USE_PCAP
