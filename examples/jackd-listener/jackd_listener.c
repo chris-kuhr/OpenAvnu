@@ -87,11 +87,11 @@ static const char *version_str = "jack_listener v" VERSION_STR "\n"
 #ifdef AVB_XDP
 struct record {
 	__u64 timestamp;
-	struct datarec total; /* defined in common_kern_user.h */
+	struct datarec total;
 };
 
 struct stats_record {
-	struct record stats[1]; /* Assignment#2: Hint */
+	struct record stats[1];
 };
 #endif // AVB_XDP
 
@@ -349,7 +349,11 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 #else
 
 
-int receive_avtp_packet(  )
+int receive_avtp_packet(
+#ifdef AVB_XDP
+                        struct stats_record prev, struct stats_record record
+#endif
+                        )
 {
     char stream_packet[BUFLEN];
 
@@ -392,6 +396,17 @@ int receive_avtp_packet(  )
 
 #ifdef AVB_XDP
 
+//    prev = record; /* struct copy */
+//    /* Collect other XDP actions stats  */
+//    __u32 key = XDP_PASS;
+//    map_collect(map_fd, map_type, key, &stats_rec->stats[0]);
+//
+//    struct record *rec, *prev;
+//    const char *action = action2str(XDP_PASS);
+//    rec  = &stats_rec->stats[0];
+//    prev = &stats_prev->stats[0];
+//
+//    int64_t diff = rec->total.rx_pkt_cnt - prev->total.rx_pkt_cnt;
 //    mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
 //    memcpy(&frame[0], &record_stats[i], sizeof(frame));
 //
@@ -663,6 +678,9 @@ int main(int argc, char *argv[])
 		       );
 	}
 
+    /* Assignment#2: Collect other XDP actions stats  */
+    __u32 key = XDP_PASS;
+    map_collect(map_fd, map_type, key, &stats_rec->stats[0]);
 
 #endif
 
@@ -850,39 +868,17 @@ int main(int argc, char *argv[])
 	pcap_loop(handle, -1, pcap_callback, (u_char*)ctx);
 #else
 
+
+
+    while(!ctx->halt_tx){
+
+        receive_avtp_packet(
 #ifdef AVB_XDP
-    /* Assignment#2: Collect other XDP actions stats  */
-    __u32 key = XDP_PASS;
-    map_collect(map_fd, map_type, key, &stats_rec->stats[0]);
-
-
-    while(!ctx->halt_tx){
-
-        receive_avtp_packet();
-
-		prev = record; /* struct copy */
-        /* Assignment#2: Collect other XDP actions stats  */
-        __u32 key = XDP_PASS;
-        map_collect(map_fd, map_type, key, &stats_rec->stats[0]);
-
-        struct record *rec, *prev;
-        const char *action = action2str(XDP_PASS);
-		rec  = &stats_rec->stats[0];
-		prev = &stats_prev->stats[0];
-
-		int64_t diff = rec->total.rx_pkt_cnt - prev->total.rx_pkt_cnt;
-    }
-#else
-
-
-    while(!ctx->halt_tx){
-
-        receive_avtp_packet();
-    }
-
+                            prev, record
 #endif
+                            );
 
-
+    }
 
 
 #endif // USE_PCAP
