@@ -47,7 +47,8 @@ LIBS = -l:libbpf.a -lelf -ljack -lpthread
 
 .PHONY: clean loader $(XDP_OBJ)
 
-all: $(XDP_OBJ) loader $(USER_TARGETS) 
+all: $(XDP_OBJ) loader jackd_listener
+#$(USER_TARGETS) 
 
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
@@ -68,7 +69,8 @@ $(COMMON_OBJS): %.o: %.h
 
 #%.o: %.c $(OBJECT_LIBBPF) Makefile $(COMMON_MK) $(COMMON_OBJS) $(KERN_USER_H)  
 
-$(USER_TARGETS): 
+#$(USER_TARGETS): 
+jackd_listener:
 	$(CC) -Wall $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) -o $@ jackd_listener.c  avb_sockets.c  $(MRPLISTENER_TARGETS) $(COMMON_OBJS) $(LIBS) 
 
 	 
