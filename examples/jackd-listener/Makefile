@@ -1,5 +1,6 @@
 XDP_TARGETS  := xdp_avb_kern
 USER_TARGETS := jackd_listener
+LOADER_TARGETS := loader
 
 LLC = llc
 CLANG = clang
@@ -45,16 +46,15 @@ CPPFLAGS = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
 LIBS = -l:libbpf.a -lelf -ljack -lpthread
 
 
-.PHONY: clean loader $(XDP_OBJ)
+.PHONY: clean $(LOADER_TARGETS) $(XDP_OBJ)
 
-all: $(XDP_OBJ) loader $(USER_TARGETS)
-#$(USER_TARGETS) 
+all: $(USER_TARGETS) $(XDP_OBJ) $(LOADER_TARGETS) 
 
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
 
 loader:
-	make -C loader
+	make -C $(LOADER_TARGETS)
 
 
 # Create dependency: detect if C-file change and touch H-file, to trigger
@@ -100,6 +100,6 @@ $(XDP_OBJ): %.o: %.c  Makefile $(COMMON_MK)
 
 	
 clean:
-	make -C loader clean
+	make -C $(LOADER_TARGETS) clean
 	$(RM) $(USER_TARGETS)
 	$(RM) `find . -name "*~" -o -name "*.[oa]" -o -name "\#*\#" -o -name TAGS -o -name core -o -name "*.orig"`
