@@ -126,6 +126,10 @@ int  xdp_avtp_func(struct xdp_md *ctx)
             seventeen22_header_t *hdr1722;
             __u8 proto1722 = parse_1722hdr(&nh, data_end, &hdr1722);
         
+        
+                rec->rx_pkt_cnt++;
+                
+                
             if( 0xff == proto1722)
                 return XDP_PASS;
             if( bpf_htons(proto1722) == 0x00
@@ -138,6 +142,9 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                         && (listen_stream_id[6] == hdr1722->stream_id[6])
                         && (listen_stream_id[7] == hdr1722->stream_id[7]) ){
 
+
+                rec->rx_pkt_cnt++;
+
                 six1883_header_t *hdr61883;
                 __u8 audioChannels = parse_61883hdr(&nh, data_end, &hdr61883);
                 if( 0xff == audioChannels )
@@ -145,6 +152,10 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
                 __u32 *avtpSamples = (__u32*)nh.pos;
 
+
+                rec->rx_pkt_cnt++;
+                
+                
                 if( avtpSamples + 6*AUDIO_CHANNELS > data_end)
                     return XDP_DROP;
 
@@ -166,7 +177,6 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
 
 
-                rec->rx_pkt_cnt++;
                 if( rec->rx_pkt_cnt % SAMPLEBUF_SIZE == 0 ){
                     rec->accu_rx_timestamp = 0x123456789;
                     return XDP_PASS;
