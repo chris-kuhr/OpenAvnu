@@ -342,20 +342,9 @@ int receive_avtp_packet(
     fprintf(stdout, "Rx Timestamp %lx \n", packet_arrival_time_ns);
         
         
-        
-        
-        
-        
-        
     /* Collect other XDP actions stats  */
     __u32 key = XDP_PASS;
     map_collect(fd, map_type, key, &record->stats[0]);
-
-
-
-
-
-
 
     struct record *rec;
     const char *action = action2str(XDP_PASS);
@@ -617,7 +606,7 @@ int main(int argc, char *argv[])
 	        errno, strerror(errno));
     }
 	
-    bpf_obj = load_bpf_object_file(cfg.filename, cfg.ifindex);
+    bpf_obj = load_bpf_and_xdp_attach(&cfg);
 	if (!bpf_obj)
 		return EXIT_FAIL_BPF;
 
@@ -704,8 +693,6 @@ int main(int argc, char *argv[])
         fprintf(stdout,  "Listener Creation failed\n");fflush(stdout);
     }
 
-
-
 	if (create_socket(ctx)) {
 		fprintf(stderr, "Socket creation failed.\n");
 		return errno;
@@ -755,21 +742,6 @@ int main(int argc, char *argv[])
 
 
 
-
-
-
-
-
-
-
-	/*
-	 *      Replace with raw socket!!!
-     */
-
-
-
-
-
     while(!ctx->halt_tx){
 
         receive_avtp_packet(
@@ -779,15 +751,6 @@ int main(int argc, char *argv[])
                             );
 
     }
-
-
-
-
-
-
-
-
-
 
 
 
