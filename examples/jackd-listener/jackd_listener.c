@@ -81,7 +81,7 @@ struct ethernet_header{
 
 /* globals */
 
-static const char *version_str = "jack_listener v" VERSION_STR "\n"
+static const char *version_str = "jackd_listener v" VERSION_STR "\n"
     "Copyright (c) 2013, Katja Rohloff, Copyright (c) 2019, Christoph Kuhr\n";
 
 #ifdef AVB_XDP
@@ -97,6 +97,29 @@ struct record {
 struct stats_record {
 	struct record stats[1];
 };
+
+static const struct option_wrapper long_options[] = {
+	{{"help",        no_argument,		NULL, 'h' },
+	 "Show help", false},
+
+	{{"dev",         required_argument,	NULL, 'd' },
+	 "Operate on device <ifname>", "<ifname>", true},
+
+	{{"skb-mode",    no_argument,		NULL, 'S' },
+	 "Install XDP program in SKB (AKA generic) mode"},
+
+	{{"native-mode", no_argument,		NULL, 'N' },
+	 "Install XDP program in native mode"},
+
+	{{"force",       no_argument,		NULL, 'F' },
+	 "Force install, replacing existing program on interface"},
+
+	{{"unload",      no_argument,		NULL, 'U' },
+	 "Unload XDP program instead of loading"},
+
+	{{0, 0, NULL,  0 }}
+};
+
 #endif // AVB_XDP
 
 
@@ -629,14 +652,15 @@ int main(int argc, char *argv[])
 	strncpy(cfg.filename, default_filename, sizeof(cfg.filename));
 	strncpy(cfg.progsec,  default_progsec,  sizeof(cfg.progsec));
 	/* Cmdline options can change progsec */
-	parse_cmdline_args(argc, argv, long_options, &cfg, __doc__);
+	parse_cmdline_args(argc, argv, long_options, &cfg, version_str);
 
 	/* Required option */
 	if (cfg.ifindex == -1) {
 		fprintf(stderr, "ERR: required option --dev missing\n");
-		usage(argv[0], __doc__, long_options, (argc == 1));
+		usage(argv[0], version_str, long_options, (argc == 1));
 		return EXIT_FAIL_OPTION;
 	}
+	
 //	if (cfg.do_unload)
 //		return xdp_link_detach(cfg.ifindex, cfg.xdp_flags, 0);
 //
