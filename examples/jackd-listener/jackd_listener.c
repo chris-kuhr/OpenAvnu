@@ -92,49 +92,6 @@ struct ethernet_header{
 static const char *version_str = "jackd_listener v" VERSION_STR "\n"
     "Copyright (c) 2013, Katja Rohloff, Copyright (c) 2019, Christoph Kuhr\n";
 
-#ifdef AVB_XDP
-
-static const char *default_filename = "xdp_avb_kern.o";
-static const char *default_progsec = "xdp_avtp";
-
-struct record {
-	__u64 timestamp;
-	struct datarec total;
-};
-
-struct stats_rec {
-	struct record stats[1];
-};
-
-static const struct option_wrapper long_options[] = {
-	{{"help",        no_argument,		NULL, 'h' },
-	 "Show help", false},
-
-	{{"dev",         required_argument,	NULL, 'd' },
-	 "Operate on device <ifname>", "<ifname>", true},
-
-	{{"skb-mode",    no_argument,		NULL, 'S' },
-	 "Install XDP program in SKB (AKA generic) mode"},
-
-	{{"native-mode", no_argument,		NULL, 'N' },
-	 "Install XDP program in native mode"},
-
-	{{"force",       no_argument,		NULL, 'F' },
-	 "Force install, replacing existing program on interface"},
-
-	{{"unload",      no_argument,		NULL, 'U' },
-	 "Unload XDP program instead of loading"},
-
-	{{0, 0, NULL,  0 }}
-};
-
-#endif // AVB_XDP
-
-
-
-#ifdef USE_PCAP
-pcap_t* handle;
-#endif // USE_PCAP
 
 u_char glob_ether_type[] = { 0x22, 0xf0 };
 static jack_port_t** outputports;
@@ -150,12 +107,25 @@ struct pollfd *avtp_transport_socket_fds;
 
 
 #ifdef AVB_XDP
+
+static const char *default_filename = "xdp_avb_kern.o";
+static const char *default_progsec = "xdp_avtp";
+
+struct record {
+	__u64 timestamp;
+	struct datarec total;
+};
+
+struct stats_rec {
+	struct record stats[1];
+};
+
 int find_map_fd(struct bpf_object *bpf_obj, const char *mapname)
 {
 	struct bpf_map *map;
 	int map_fd = -1;
 
-	/* Lesson#3: bpf_object to bpf_map */
+	/* bpf_object to bpf_map */
 	map = bpf_object__find_map_by_name(bpf_obj, mapname);
         if (!map) {
 		fprintf(stderr, "ERR: cannot find map by name: %s\n", mapname);
@@ -203,12 +173,12 @@ static bool map_collect(int fd, __u32 map_type, __u32 key, struct record *rec)
 		break;
 	}
 
-	/* Assignment#1: Add byte counters */
+	/* Add byte counters */
 	rec->total.rx_pkt_cnt = value.rx_pkt_cnt;
 	return true;
 }
 
-/* Lesson#4: It is userspace responsibility to known what map it is reading and
+/* It is userspace responsibility to known what map it is reading and
  * know the value size. Here get bpf_map_info and check if it match our expected
  * values.
  */
@@ -292,12 +262,6 @@ void shutdown_and_exit(int sig)
 		printf("mrp_disconnect failed\n");
 
 	close(ctx_sig->control_socket);
-#ifdef USE_PCAP
-	if (NULL != handle) {
-		pcap_breakloop(handle);
-		pcap_close(handle);
-	}
-#endif // USE_PCAP
 
 	if (NULL != client) {
 		fprintf(stdout, "jack\n");
@@ -314,76 +278,12 @@ void shutdown_and_exit(int sig)
 
 
 
-#ifdef USE_PCAP
-void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const u_char* packet)
-{
-	unsigned char* test_stream_id;
-	struct ethernet_header* eth_header;
-	uint32_t* mybuf;
-	uint32_t frame[CHANNELS];
-	jack_default_audio_sample_t jackframe[CHANNELS];
-	int cnt;
-	static int total;
-	struct mrp_listener_ctx *ctx = (struct mrp_listener_ctx*) args;
-	(void) packet_header; /* unused */
 
-	eth_header = (struct ethernet_header*)(packet);
-
-	if (0 != memcmp(glob_ether_type, eth_header->type,sizeof(eth_header->type))) {
-		return;
-	}
-
-	test_stream_id = (unsigned char*)(packet + ETHERNET_HEADER_SIZE + SEVENTEEN22_HEADER_PART1_SIZE);
-
-//	printf("Stream ID: %02x%02x%02x%02x%02x%02x%02x%02x \t %02x%02x%02x%02x%02x%02x%02x%02x \n",
-//                                     ctx->stream_id[0], ctx->stream_id[1],
-//                                     ctx->stream_id[2], ctx->stream_id[3],
-//                                     ctx->stream_id[4], ctx->stream_id[5],
-//                                     ctx->stream_id[6], ctx->stream_id[7],
-//                                     test_stream_id[0], test_stream_id[1],
-//                                     test_stream_id[2], test_stream_id[3],
-//                                     test_stream_id[4], test_stream_id[5],
-//                                     test_stream_id[6], test_stream_id[7]);
-	if (0 != memcmp(test_stream_id, ctx->stream_id, STREAM_ID_SIZE)) {
-		return;
-	}
-
-	mybuf = (uint32_t*) (packet + HEADER_SIZE);
-
-	for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {
-
-		memcpy(&frame[0], &mybuf[i], sizeof(frame));
-
-		for(int j = 0; j < CHANNELS; j++) {
-
-			frame[j] = ntohl(frame[j]);   /* convert to host-byte order */
-			frame[j] &= 0x00ffffff;       /* ignore leading label */
-			frame[j] <<= 8;               /* left-align remaining PCM-24 sample */
-
-			jackframe[j] = ((int32_t)frame[j])/(float)(MAX_SAMPLE_VALUE);
-		}
-
-		if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
-			jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
-//			fprintf(stdout, "Wrote %d bytes after %i samples.\n", SAMPLE_SIZE * CHANNELS, total);
-		} else {
-			fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
-		}
-
-		if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
-			/** Ringbuffer has only 25% or less write space available, it's time to tell jackd
-			to read some data. */
-			ready = 1;
-		}
-
-	}
-}
-#else
 
 
 int receive_avtp_packet(
 #ifdef AVB_XDP
-                        struct stats_rec prev, struct stats_rec record
+                        int fd, __u32 map_type, struct stats_rec *record
 #endif
                         )
 {
@@ -445,46 +345,60 @@ int receive_avtp_packet(
     fprintf(stdout, "Rx Timestamp %lx \n", packet_arrival_time_ns);
         
         
-//    prev = record; /* struct copy */
-//    /* Collect other XDP actions stats  */
-//    __u32 key = XDP_PASS;
-//    map_collect(map_fd, map_type, key, &stats_rec->stats[0]);
-//
-//    struct record *rec, *prev;
-//    const char *action = action2str(XDP_PASS);
-//    rec  = &stats_rec->stats[0];
-//    prev = &stats_prev->stats[0];
-//
-//    int64_t diff = rec->total.rx_pkt_cnt - prev->total.rx_pkt_cnt;
-//    mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
-//    memcpy(&frame[0], &record_stats[i], sizeof(frame));
-//
-//    for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {
-//        for(int j = 0; j < CHANNELS; j++) {
-//
-//            frame[j] = ntohl(frame[j]);   /* convert to host-byte order */
-//            frame[j] &= 0x00ffffff;       /* ignore leading label */
-//            frame[j] <<= 8;               /* left-align remaining PCM-24 sample */
-//
-//            jackframe[j] = ((int32_t)frame[j])/(float)(MAX_SAMPLE_VALUE);
-//        }
-//
-//        if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
-//            jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
-////			fprintf(stdout, "Wrote %d bytes after %i samples.\n", SAMPLE_SIZE * CHANNELS, total);
-//        } else {
-//            fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
-//        }
-//
-//        if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
-//            /** Ringbuffer has only 25% or less write space available, it's time to tell jackd
-//            to read some data. */
-//            ready = 1;
-//        }
-//    }
+        
+        
+        
+        
+        
+    /* Collect other XDP actions stats  */
+    __u32 key = XDP_PASS;
+    map_collect(stats_map_fd, map_type, key, &record->stats[0]);
+
+
+
+
+
+
+
+    struct record *rec;
+    const char *action = action2str(XDP_PASS);
+    rec  = &record->stats[0];
+
+//    int64_t diff = rec->total.rx_pkt_cnt
+
+    mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
+
+//    memcpy(&frame[0], &rec, sizeof(frame));
+
+
+
+
+
+    for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {
+        for(int j = 0; j < CHANNELS; j++) {
+
+            frame[j] = ntohl(frame[j]);   /* convert to host-byte order */
+            frame[j] &= 0x00ffffff;       /* ignore leading label */
+            frame[j] <<= 8;               /* left-align remaining PCM-24 sample */
+
+            jackframe[j] = ((int32_t)frame[j])/(float)(MAX_SAMPLE_VALUE);
+        }
+
+        if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
+            jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
+//			fprintf(stdout, "Wrote %d bytes after %i samples.\n", SAMPLE_SIZE * CHANNELS, total);
+        } else {
+            fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
+        }
+
+        if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
+            /** Ringbuffer has only 25% or less write space available, it's time to tell jackd
+            to read some data. */
+            ready = 1;
+        }
+    }
 
 #else
-#endif // AVB_XDP
     if( // Compare Stream IDs
         (glob_stream_id[0] == (uint8_t) stream_packet[18]) &&
         (glob_stream_id[1] == (uint8_t) stream_packet[19]) &&
@@ -525,14 +439,11 @@ int receive_avtp_packet(
 
         }
     }
-//#endif // AVB_XDP
+#endif // AVB_XDP
     return 0;
 }
 
 
-
-
-#endif // USE_PCAP
 
 static int process_jack(jack_nframes_t nframes, void* arg)
 {
@@ -641,6 +552,41 @@ int main(int argc, char *argv[])
 	int dstStreamUId = -1;
 	int dstEndpointId = -1;
 
+    avtp_transport_socket_fds = (struct pollfd*)malloc(sizeof(struct pollfd));
+    memset(avtp_transport_socket_fds, 0, sizeof(avtp_transport_socket_fds));
+
+	int rc;
+	struct mrp_listener_ctx *ctx = malloc(sizeof(struct mrp_listener_ctx));
+	struct mrp_domain_attr *class_a = malloc(sizeof(struct mrp_domain_attr));
+	struct mrp_domain_attr *class_b = malloc(sizeof(struct mrp_domain_attr));
+	ctx_sig = ctx;
+	signal(SIGINT, shutdown_and_exit);
+
+	int c;
+	while((c = getopt(argc, argv, "hi:s:e:")) > 0)	{
+		switch (c)		{
+            case 'h':
+                help();
+                break;
+            case 'i':
+                dev = strdup(optarg);
+                break;
+            case 's':
+                dstStreamUId = atoi(optarg);
+                break;
+            case 'e':
+                dstEndpointId = atoi(optarg);
+                break;
+            default:
+                    fprintf(stderr, "Unrecognized option!\n");
+		}
+	}
+
+	if (NULL == dev || -1 == dstStreamUId || -1 == dstEndpointId) {
+		help();
+	}
+	
+	
 #ifdef AVB_XDP
 	struct stats_rec prev, record = { 0 };
 	struct bpf_map_info map_expect = { 0 };
@@ -652,7 +598,8 @@ int main(int argc, char *argv[])
 	int err;
 
 	struct config cfg = {
-		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_DRV_MODE,
+		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE,
+    	.xsk_bind_flags = XDP_COPY,
 		.ifindex   = -1,
 		.do_unload = false,
 	};
@@ -660,22 +607,23 @@ int main(int argc, char *argv[])
 	/* Set default BPF-ELF object file and BPF program name */
 	strncpy(cfg.filename, default_filename, sizeof(cfg.filename));
 	strncpy(cfg.progsec,  default_progsec,  sizeof(cfg.progsec));
-	/* Cmdline options can change progsec */
-	parse_cmdline_args(argc, argv, long_options, &cfg, version_str);
-
-	/* Required option */
-	if (cfg.ifindex == -1) {
-		fprintf(stderr, "ERR: required option --dev missing\n");
-		usage(argv[0], version_str, long_options, (argc == 1));
-		return EXIT_FAIL_OPTION;
-	}
 	
-//	if (cfg.do_unload)
-//		return xdp_link_detach(cfg.ifindex, cfg.xdp_flags, 0);
-//
-//	bpf_obj = load_bpf_and_xdp_attach(&cfg);
-//	if (!bpf_obj)
-//		return EXIT_FAIL_BPF;
+    if (strlen(dev) >= IF_NAMESIZE) {
+        fprintf(stderr, "ERR: --dev name too long\n");
+    }
+    cfg.ifname = (char *)&cfg.ifname_buf;
+    strncpy(cfg.ifname, dev, IF_NAMESIZE);
+    cfg.ifindex = if_nametoindex(cfg.ifname);
+    if (cfg.ifindex == 0) {
+        fprintf(stderr,
+	        "ERR: --dev name unknown err(%d):%s\n",
+	        errno, strerror(errno));
+    }
+	cfg.xsk_bind_flags &= XDP_ZEROCOPY;
+	
+    bpf_obj = load_bpf_object_file(cfg.filename, cfg.ifindex);
+	if (!bpf_obj)
+		return EXIT_FAIL_BPF;
 
 
 	/* Locate map file descriptor */
@@ -709,49 +657,6 @@ int main(int argc, char *argv[])
 
 #endif
 
-#ifdef USE_PCAP
-	char errbuf[PCAP_ERRBUF_SIZE];
-	struct bpf_program comp_filter_exp;		/** The compiled filter expression */
-	char filter_exp[100];	/** The filter expression */
-#else
-
-    avtp_transport_socket_fds = (struct pollfd*)malloc(sizeof(struct pollfd));
-    memset(avtp_transport_socket_fds, 0, sizeof(avtp_transport_socket_fds));
-
-#endif // USE_PCAP
-
-
-
-	int rc;
-	struct mrp_listener_ctx *ctx = malloc(sizeof(struct mrp_listener_ctx));
-	struct mrp_domain_attr *class_a = malloc(sizeof(struct mrp_domain_attr));
-	struct mrp_domain_attr *class_b = malloc(sizeof(struct mrp_domain_attr));
-	ctx_sig = ctx;
-	signal(SIGINT, shutdown_and_exit);
-
-	int c;
-	while((c = getopt(argc, argv, "hi:s:e:")) > 0)	{
-		switch (c)		{
-            case 'h':
-                help();
-                break;
-            case 'i':
-                dev = strdup(optarg);
-                break;
-            case 's':
-                dstStreamUId = atoi(optarg);
-                break;
-            case 'e':
-                dstEndpointId = atoi(optarg);
-                break;
-            default:
-                    fprintf(stderr, "Unrecognized option!\n");
-		}
-	}
-
-	if (NULL == dev || -1 == dstStreamUId || -1 == dstEndpointId) {
-		help();
-	}
 
 	rc = mrp_listener_client_init(ctx);
 	if (rc)
@@ -786,7 +691,6 @@ int main(int argc, char *argv[])
                                      glob_dest_addr[2], glob_dest_addr[3],
                                      glob_dest_addr[4], glob_dest_addr[5]);
 
-#ifndef USE_PCAP
     fprintf(stdout,  "create RAW AVTP Socket %s  \n", dev);fflush(stdout);
 
     if( create_RAW_AVB_Transport_Socket(stdout, &(avtp_transport_socket_fds->fd), dev) > RETURN_VALUE_FAILURE ){
@@ -804,7 +708,6 @@ int main(int argc, char *argv[])
         fprintf(stdout,  "Listener Creation failed\n");fflush(stdout);
     }
 
-#endif // USE_PCAP
 
 
 	if (create_socket(ctx)) {
@@ -868,30 +771,6 @@ int main(int argc, char *argv[])
      */
 
 
-#ifdef USE_PCAP
-	fprintf(stdout,"PCAP live capture...\n");
-	/** session, get session handler */
-	handle = pcap_open_live(dev, BUFSIZ, 1, -1, errbuf);
-	if (NULL == handle) {
-		fprintf(stderr, "Could not open device %s: %s.\n", dev, errbuf);
-		shutdown_and_exit(0);
-	}
-
-	/** compile and apply filter */
-	sprintf(filter_exp,"ether dst %02x:%02x:%02x:%02x:%02x:%02x",ctx->dst_mac[0],ctx->dst_mac[1],ctx->dst_mac[2],ctx->dst_mac[3],ctx->dst_mac[4],ctx->dst_mac[5]);
-	if (-1 == pcap_compile(handle, &comp_filter_exp, filter_exp, 0, PCAP_NETMASK_UNKNOWN)) {
-		fprintf(stderr, "Could not parse filter %s: %s.\n", filter_exp, pcap_geterr(handle));
-		shutdown_and_exit(0);
-	}
-
-	if (-1 == pcap_setfilter(handle, &comp_filter_exp)) {
-		fprintf(stderr, "Could not install filter %s: %s.\n", filter_exp, pcap_geterr(handle));
-		shutdown_and_exit(0);
-	}
-
-	/** loop forever and call callback-function for every received packet */
-	pcap_loop(handle, -1, pcap_callback, (u_char*)ctx);
-#else
 
 
 
@@ -899,14 +778,12 @@ int main(int argc, char *argv[])
 
         receive_avtp_packet(
 #ifdef AVB_XDP
-                            prev, record
+                            stats_map_fd, info.type, &stats_record
 #endif
                             );
 
     }
 
-
-#endif // USE_PCAP
 
 
 
