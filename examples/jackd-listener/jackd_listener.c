@@ -105,7 +105,7 @@ struct pollfd *avtp_transport_socket_fds;
 
 #ifdef AVB_XDP
 
-static const char *default_filename = "xdp_avb_kern.o";
+static const char *default_filename = "/home/soundjack/OpenAvnu.git.kuhr.xdp/examples/jackd-listener/xdp_avb_kern.o";
 static const char *default_progsec = "xdp_avtp";
 
 struct record {
