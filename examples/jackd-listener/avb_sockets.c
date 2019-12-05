@@ -18,6 +18,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #include "avb_sockets.h"
 
+#include <linux/if.h>
+
 #define DUMMY_STREAMID (0xABCDEF)
 
 // IEEE 1722 AVTP Receive Socket
