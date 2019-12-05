@@ -172,6 +172,7 @@ static bool map_collect(int fd, __u32 map_type, __u32 key, struct record *rec)
 
 	/* Add byte counters */
 	rec->total.rx_pkt_cnt = value.rx_pkt_cnt;
+	fprintf(stderr, "Packet Counter %d\n", value.rx_pkt_cnt);
 	return true;
 }
 
