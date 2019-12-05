@@ -26,6 +26,7 @@ extern "C"
 
 #define _GNU_SOURCE
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -40,7 +41,6 @@ extern "C"
 #include <poll.h>
 
 #include <netinet/in.h>
-//
 
 #define RETURN_VALUE_FAILURE 0
 #define RETURN_VALUE_SUCCESS 1
