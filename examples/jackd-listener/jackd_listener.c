@@ -434,7 +434,7 @@ int receive_avtp_packet(
         }
         cmsg = CMSG_NXTHDR(&msg,cmsg);
     }
-    fprintf(stdout, "Rx Timestamp %x \n", packet_arrival_time_ns);
+    fprintf(stdout, "Rx Timestamp %lx \n", packet_arrival_time_ns);
         
         
 //    prev = record; /* struct copy */
@@ -694,9 +694,9 @@ int main(int argc, char *argv[])
 		       );
 	}
 
-    /* Assignment#2: Collect other XDP actions stats  */
+    /* Collect other XDP actions stats  */
     __u32 key = XDP_PASS;
-    map_collect(map_fd, map_type, key, &stats_rec->stats[0]);
+    map_collect(stats_map_fd, info.type, key, &stats_rec->stats[0]);
 
 #endif
 
