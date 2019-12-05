@@ -325,73 +325,82 @@ int receive_avtp_packet(
 
 #ifdef AVB_XDP
 
+    if( // Compare Stream IDs
+        (glob_stream_id[0] == (uint8_t) stream_packet[18]) &&
+        (glob_stream_id[1] == (uint8_t) stream_packet[19]) &&
+        (glob_stream_id[2] == (uint8_t) stream_packet[20]) &&
+        (glob_stream_id[3] == (uint8_t) stream_packet[21]) &&
+        (glob_stream_id[4] == (uint8_t) stream_packet[22]) &&
+        (glob_stream_id[5] == (uint8_t) stream_packet[23]) &&
+        (glob_stream_id[6] == (uint8_t) stream_packet[24]) &&
+        (glob_stream_id[7] == (uint8_t) stream_packet[25])
+    ){
 
-    uint64_t packet_arrival_time_ns = 0;
-       // Packet Arrival Time from Device
-    cmsg = CMSG_FIRSTHDR(&msg);
-    while( cmsg != NULL ) {
-        if( cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMPING ) {
-            struct timespec *ts_device, *ts_system;
-            ts_system = ((struct timespec *) CMSG_DATA(cmsg)) + 1;
-            ts_device = ts_system + 1;
-            packet_arrival_time_ns =  (ts_device->tv_sec*1000000000LL + ts_device->tv_nsec);
-            break;
+        uint64_t packet_arrival_time_ns = 0;
+           // Packet Arrival Time from Device
+        cmsg = CMSG_FIRSTHDR(&msg);
+        while( cmsg != NULL ) {
+            if( cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMPING ) {
+                struct timespec *ts_device, *ts_system;
+                ts_system = ((struct timespec *) CMSG_DATA(cmsg)) + 1;
+                ts_device = ts_system + 1;
+                packet_arrival_time_ns =  (ts_device->tv_sec*1000000000LL + ts_device->tv_nsec);
+                break;
+            }
+            cmsg = CMSG_NXTHDR(&msg,cmsg);
         }
-        cmsg = CMSG_NXTHDR(&msg,cmsg);
-    }
-    fprintf(stdout, "Rx Timestamp %lx \n", packet_arrival_time_ns);
-        
-        
-    /* Collect other XDP actions stats  */
-    __u32 key = XDP_PASS;
-    map_collect(fd, map_type, key, &record->stats[0]);
+        fprintf(stdout, "Rx Timestamp %lx \n", packet_arrival_time_ns);
+            
+            
+        /* Collect other XDP actions stats  */
+        __u32 key = XDP_PASS;
+        map_collect(fd, map_type, key, &record->stats[0]);
 
-    struct record *rec;
-    const char *action = action2str(XDP_PASS);
-    rec  = &record->stats[0];
-    fprintf(stdout, "Rx Timestamp %lx \n", packet_arrival_time_ns);
+        struct record *rec;
+        const char *action = action2str(XDP_PASS);
+        rec  = &record->stats[0];
 
-	fprintf(stdout, "nh type %x \n",  rec->total.nh_type);
-	fprintf(stdout, "listen dst mac %x-%x-%x-%x-%x-%x \n",  rec->total.listen_dst_mac[0],  rec->total.listen_dst_mac[1],  rec->total.listen_dst_mac[2],  rec->total.listen_dst_mac[3],  rec->total.listen_dst_mac[4],  rec->total.listen_dst_mac[5]);
-	fprintf(stdout, "listen sid %x-%x-%x-%x-%x-%x-%x-%x \n",  rec->total.listen_stream_id[0],  rec->total.listen_stream_id[1],  rec->total.listen_stream_id[2],  rec->total.listen_stream_id[3],  rec->total.listen_stream_id[4],  rec->total.listen_stream_id[5],  rec->total.listen_stream_id[6],  rec->total.listen_stream_id[7]);
-	fprintf(stdout, "proto %x \n",  rec->total.proto1722);
-	fprintf(stdout, "channels %x \n",  rec->total.audioChannels);
+	    fprintf(stdout, "nh type %x \n",  rec->total.nh_type);
+	    fprintf(stdout, "listen dst mac %x-%x-%x-%x-%x-%x \n",  rec->total.listen_dst_mac[0],  rec->total.listen_dst_mac[1],  rec->total.listen_dst_mac[2],  rec->total.listen_dst_mac[3],  rec->total.listen_dst_mac[4],  rec->total.listen_dst_mac[5]);
+	    fprintf(stdout, "listen sid %x-%x-%x-%x-%x-%x-%x-%x \n",  rec->total.listen_stream_id[0],  rec->total.listen_stream_id[1],  rec->total.listen_stream_id[2],  rec->total.listen_stream_id[3],  rec->total.listen_stream_id[4],  rec->total.listen_stream_id[5],  rec->total.listen_stream_id[6],  rec->total.listen_stream_id[7]);
+	    fprintf(stdout, "proto %x \n",  rec->total.proto1722);
+	    fprintf(stdout, "channels %x \n",  rec->total.audioChannels);
 	
 	
-//    int64_t diff = rec->total.rx_pkt_cnt
+    //    int64_t diff = rec->total.rx_pkt_cnt
 
-    mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
+        mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
 
-//    memcpy(&frame[0], &rec, sizeof(frame));
-
-
+    //    memcpy(&frame[0], &rec, sizeof(frame));
 
 
 
-    for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {
-        for(int j = 0; j < CHANNELS; j++) {
 
-            frame[j] = ntohl(frame[j]);   /* convert to host-byte order */
-            frame[j] &= 0x00ffffff;       /* ignore leading label */
-            frame[j] <<= 8;               /* left-align remaining PCM-24 sample */
 
-            jackframe[j] = ((int32_t)frame[j])/(float)(MAX_SAMPLE_VALUE);
-        }
+        for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {
+            for(int j = 0; j < CHANNELS; j++) {
 
-        if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
-            jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
-//			fprintf(stdout, "Wrote %d bytes after %i samples.\n", SAMPLE_SIZE * CHANNELS, total);
-        } else {
-            fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
-        }
+                frame[j] = ntohl(frame[j]);   /* convert to host-byte order */
+                frame[j] &= 0x00ffffff;       /* ignore leading label */
+                frame[j] <<= 8;               /* left-align remaining PCM-24 sample */
 
-        if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
-            /** Ringbuffer has only 25% or less write space available, it's time to tell jackd
-            to read some data. */
-            ready = 1;
+                jackframe[j] = ((int32_t)frame[j])/(float)(MAX_SAMPLE_VALUE);
+            }
+
+            if ((cnt = jack_ringbuffer_write_space(ringbuffer)) >= SAMPLE_SIZE * CHANNELS) {
+                jack_ringbuffer_write(ringbuffer, (void*)&jackframe[0], SAMPLE_SIZE * CHANNELS);
+    //			fprintf(stdout, "Wrote %d bytes after %i samples.\n", SAMPLE_SIZE * CHANNELS, total);
+            } else {
+                fprintf(stdout, "Only %i bytes available after %i samples.\n", cnt, total);
+            }
+
+            if (jack_ringbuffer_write_space(ringbuffer) <= SAMPLE_SIZE * CHANNELS * DEFAULT_RINGBUFFER_SIZE / 4) {
+                /** Ringbuffer has only 25% or less write space available, it's time to tell jackd
+                to read some data. */
+                ready = 1;
+            }
         }
     }
-
 #else
     if( // Compare Stream IDs
         (glob_stream_id[0] == (uint8_t) stream_packet[18]) &&
