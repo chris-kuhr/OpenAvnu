@@ -696,7 +696,7 @@ int main(int argc, char *argv[])
 
     /* Collect other XDP actions stats  */
     __u32 key = XDP_PASS;
-    map_collect(stats_map_fd, info.type, key, &stats_rec->stats[0]);
+    map_collect(stats_map_fd, info.type, key, &stats_record->stats[0]);
 
 #endif
 
