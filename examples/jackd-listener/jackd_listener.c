@@ -68,7 +68,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define DEFAULT_RINGBUFFER_SIZE (32768)
 #define MAX_SAMPLE_VALUE ((1U << ((sizeof(int32_t) * 8) -1)) -1)
 
+
+
+
+
+
 #define AVB_XDP
+
+
+
 
 struct mrp_listener_ctx *ctx_sig;//Context pointer for signal handler
 
@@ -696,7 +704,7 @@ int main(int argc, char *argv[])
 
     /* Collect other XDP actions stats  */
     __u32 key = XDP_PASS;
-    map_collect(stats_map_fd, info.type, key, &stats_record->stats[0]);
+    map_collect(stats_map_fd, info.type, key, &stats_record.stats[0]);
 
 #endif
 
