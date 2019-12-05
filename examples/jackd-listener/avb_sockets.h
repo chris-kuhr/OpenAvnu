@@ -40,7 +40,7 @@ extern "C"
 #include <poll.h>
 
 #include <netinet/in.h>
-#include <linux/if.h>
+//#include <linux/if.h>
 
 #define RETURN_VALUE_FAILURE 0
 #define RETURN_VALUE_SUCCESS 1
