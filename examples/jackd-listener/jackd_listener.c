@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //#include <net/if.h>
 #include <linux/if_link.h> /* depend on kernel-headers installed */
 
-#include <uapi/linux/if_xdp.h>
+#include "./libbpf/include/uapi/linux/if_xdp.h"
 #include "./headers/bpf_util.h" /* bpf_num_possible_cpus */
 #include "./common/common_params.h"
 #include "./common/common_user_bpf_xdp.h"
