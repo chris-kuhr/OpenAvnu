@@ -85,6 +85,10 @@ static const char *version_str = "jack_listener v" VERSION_STR "\n"
     "Copyright (c) 2013, Katja Rohloff, Copyright (c) 2019, Christoph Kuhr\n";
 
 #ifdef AVB_XDP
+
+static const char *default_filename = "xdp_avb_kern.o";
+static const char *default_progsec = "xdp_avtp";
+
 struct record {
 	__u64 timestamp;
 	struct datarec total;
@@ -620,30 +624,29 @@ int main(int argc, char *argv[])
 	int interval = 2;
 	int err;
 
-//
-//	struct config cfg = {
-//		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_DRV_MODE,
-//		.ifindex   = -1,
-//		.do_unload = false,
-//	};
-//
-//	struct config cfg = {
-//		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_DRV_MODE,
-//		.ifindex   = -1,
-//		.do_unload = false,
-//	};
-//	/* Set default BPF-ELF object file and BPF program name */
-//	strncpy(cfg.filename, default_filename, sizeof(cfg.filename));
-//	strncpy(cfg.progsec,  default_progsec,  sizeof(cfg.progsec));
-//	/* Cmdline options can change progsec */
-//	parse_cmdline_args(argc, argv, long_options, &cfg, __doc__);
-//
-//	/* Required option */
-//	if (cfg.ifindex == -1) {
-//		fprintf(stderr, "ERR: required option --dev missing\n");
-//		usage(argv[0], __doc__, long_options, (argc == 1));
-//		return EXIT_FAIL_OPTION;
-//	}
+	struct config cfg = {
+		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_DRV_MODE,
+		.ifindex   = -1,
+		.do_unload = false,
+	};
+
+	struct config cfg = {
+		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_DRV_MODE,
+		.ifindex   = -1,
+		.do_unload = false,
+	};
+	/* Set default BPF-ELF object file and BPF program name */
+	strncpy(cfg.filename, default_filename, sizeof(cfg.filename));
+	strncpy(cfg.progsec,  default_progsec,  sizeof(cfg.progsec));
+	/* Cmdline options can change progsec */
+	parse_cmdline_args(argc, argv, long_options, &cfg, __doc__);
+
+	/* Required option */
+	if (cfg.ifindex == -1) {
+		fprintf(stderr, "ERR: required option --dev missing\n");
+		usage(argv[0], __doc__, long_options, (argc == 1));
+		return EXIT_FAIL_OPTION;
+	}
 //	if (cfg.do_unload)
 //		return xdp_link_detach(cfg.ifindex, cfg.xdp_flags, 0);
 //
