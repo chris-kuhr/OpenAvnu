@@ -113,8 +113,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	nh.pos = data;
 
 	int nh_type = parse_ethhdr(&nh, data_end, &eth);
-	if( 0xffff == nh_type)
-        return XDP_PASS;
+	
     if( nh_type == bpf_htons(ETH_P_TSN) ){
         if( (listen_dst_mac[0] == eth->h_dest[0])
                     && (listen_dst_mac[1] == eth->h_dest[1])
