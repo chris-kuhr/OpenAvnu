@@ -383,7 +383,7 @@ void pcap_callback(u_char* args, const struct pcap_pkthdr* packet_header, const 
 
 int receive_avtp_packet(
 #ifdef AVB_XDP
-                        struct stats_record prev, struct stats_record record
+                        struct stats_rec prev, struct stats_rec record
 #endif
                         )
 {
@@ -642,7 +642,7 @@ int main(int argc, char *argv[])
 	int dstEndpointId = -1;
 
 #ifdef AVB_XDP
-	struct stats_record prev, record = { 0 };
+	struct stats_rec prev, record = { 0 };
 	struct bpf_map_info map_expect = { 0 };
 	struct bpf_map_info info = { 0 };
 	struct bpf_object *bpf_obj;
