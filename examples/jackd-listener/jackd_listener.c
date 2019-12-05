@@ -102,7 +102,7 @@ struct record {
 	struct datarec total;
 };
 
-struct stats_record {
+struct stats_rec {
 	struct record stats[1];
 };
 
@@ -647,6 +647,7 @@ int main(int argc, char *argv[])
 	struct bpf_map_info info = { 0 };
 	struct bpf_object *bpf_obj;
 	int stats_map_fd;
+    struct stats_rec stats_record;
 	int interval = 2;
 	int err;
 
