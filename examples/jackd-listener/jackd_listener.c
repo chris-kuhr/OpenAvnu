@@ -607,7 +607,7 @@ int main(int argc, char *argv[])
     }
     
 	if (cfg.do_unload)
-		return xdp_link_detach(cfg.ifindex, cfg.xdp_flags, 0);
+		xdp_link_detach(cfg.ifindex, cfg.xdp_flags, 0);
 	
     bpf_obj = load_bpf_and_xdp_attach(&cfg);
 	if (!bpf_obj)
