@@ -38,11 +38,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
 
-#include <net/if.h>
+//#include <net/if.h>
 #include <linux/if_link.h> /* depend on kernel-headers installed */
 
-#include "../common/common_params.h"
-#include "../common/common_user_bpf_xdp.h"
+#include "./common/common_params.h"
+#include "./common/common_user_bpf_xdp.h"
 #include "common_kern_user.h"
 #include "bpf_util.h" /* bpf_num_possible_cpus */
 
