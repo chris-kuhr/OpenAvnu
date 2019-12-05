@@ -360,12 +360,6 @@ int receive_avtp_packet(
         const char *action = action2str(XDP_PASS);
         rec  = &record->stats[0];
 
-	    fprintf(stdout, "nh type %x \n",  rec->total.nh_type);
-	    fprintf(stdout, "listen dst mac %x-%x-%x-%x-%x-%x \n",  rec->total.listen_dst_mac[0],  rec->total.listen_dst_mac[1],  rec->total.listen_dst_mac[2],  rec->total.listen_dst_mac[3],  rec->total.listen_dst_mac[4],  rec->total.listen_dst_mac[5]);
-	    fprintf(stdout, "listen sid %x-%x-%x-%x-%x-%x-%x-%x \n",  rec->total.listen_stream_id[0],  rec->total.listen_stream_id[1],  rec->total.listen_stream_id[2],  rec->total.listen_stream_id[3],  rec->total.listen_stream_id[4],  rec->total.listen_stream_id[5],  rec->total.listen_stream_id[6],  rec->total.listen_stream_id[7]);
-	    fprintf(stdout, "proto %x \n",  rec->total.proto1722);
-	    fprintf(stdout, "channels %x \n",  rec->total.audioChannels);
-	
 	
     //    int64_t diff = rec->total.rx_pkt_cnt
 
