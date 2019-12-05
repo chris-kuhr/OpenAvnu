@@ -585,7 +585,7 @@ int main(int argc, char *argv[])
 	struct config cfg = {
 		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE,
 		.ifindex   = -1,
-		.do_unload = false,
+		.do_unload = true,
 	};
 	cfg.xsk_bind_flags &= XDP_ZEROCOPY;
     cfg.xsk_bind_flags |= XDP_COPY;
@@ -605,6 +605,9 @@ int main(int argc, char *argv[])
 	        "ERR: --dev name unknown err(%d):%s\n",
 	        errno, strerror(errno));
     }
+    
+	if (cfg.do_unload)
+		return xdp_link_detach(cfg.ifindex, cfg.xdp_flags, 0);
 	
     bpf_obj = load_bpf_and_xdp_attach(&cfg);
 	if (!bpf_obj)
