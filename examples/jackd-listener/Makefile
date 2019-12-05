@@ -69,7 +69,7 @@ $(COMMON_OBJS): %.o: %.h
 
 #%.o: %.c $(OBJECT_LIBBPF) Makefile $(COMMON_MK) $(COMMON_OBJS) $(KERN_USER_H)  
 
-$(USER_TARGETS): 
+$(USER_TARGETS): $(MRPLISTENER_TARGETS)
 	$(CC) -Wall $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) -o $@ $(USER_TARGETS).c  avb_sockets.c  $(MRPLISTENER_TARGETS) $(COMMON_OBJS) $(LIBS) 
 
 	 
