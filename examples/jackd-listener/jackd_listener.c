@@ -26,11 +26,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <errno.h>
 #include <signal.h>
 
-#ifdef USE_PCAP
-#include <pcap/pcap.h>
-#else
 #include "avb_sockets.h"
-#endif // USE_PCAP
 
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
@@ -352,7 +348,7 @@ int receive_avtp_packet(
         
     /* Collect other XDP actions stats  */
     __u32 key = XDP_PASS;
-    map_collect(stats_map_fd, map_type, key, &record->stats[0]);
+    map_collect(fd, map_type, key, &record->stats[0]);
 
 
 
@@ -588,7 +584,6 @@ int main(int argc, char *argv[])
 	
 	
 #ifdef AVB_XDP
-	struct stats_rec prev, record = { 0 };
 	struct bpf_map_info map_expect = { 0 };
 	struct bpf_map_info info = { 0 };
 	struct bpf_object *bpf_obj;
@@ -599,10 +594,11 @@ int main(int argc, char *argv[])
 
 	struct config cfg = {
 		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_SKB_MODE,
-    	.xsk_bind_flags = XDP_COPY,
 		.ifindex   = -1,
 		.do_unload = false,
 	};
+	cfg.xsk_bind_flags &= XDP_ZEROCOPY;
+    cfg.xsk_bind_flags |= XDP_COPY;
 	
 	/* Set default BPF-ELF object file and BPF program name */
 	strncpy(cfg.filename, default_filename, sizeof(cfg.filename));
@@ -619,7 +615,6 @@ int main(int argc, char *argv[])
 	        "ERR: --dev name unknown err(%d):%s\n",
 	        errno, strerror(errno));
     }
-	cfg.xsk_bind_flags &= XDP_ZEROCOPY;
 	
     bpf_obj = load_bpf_object_file(cfg.filename, cfg.ifindex);
 	if (!bpf_obj)
