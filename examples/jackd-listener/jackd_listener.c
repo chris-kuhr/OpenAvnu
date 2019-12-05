@@ -159,9 +159,6 @@ static bool map_collect(int fd, __u32 map_type, __u32 key, struct record *rec)
 {
 	struct datarec value;
 
-	/* Get time as close as possible to reading map contents */
-	rec->timestamp = gettime();
-
 	switch (map_type) {
 	case BPF_MAP_TYPE_ARRAY:
 		map_get_value_array(fd, key, &value);
@@ -176,7 +173,7 @@ static bool map_collect(int fd, __u32 map_type, __u32 key, struct record *rec)
 	}
 
 	/* Assignment#1: Add byte counters */
-	rec->total.rx_packets = value.rx_packets;
+	rec->total.rx_pkt_cnt = value.rx_pkt_cnt;
 	return true;
 }
 
@@ -410,8 +407,6 @@ int receive_avtp_packet(
             ts_system = ((struct timespec *) CMSG_DATA(cmsg)) + 1;
             ts_device = ts_system + 1;
             packet_arrival_time_ns =  (ts_device->tv_sec*1000000000LL + ts_device->tv_nsec);
-            if( ts_cnt < NUM_TS )
-                timestamps[ts_cnt++] = packet_arrival_time_ns;
             break;
         }
         cmsg = CMSG_NXTHDR(&msg,cmsg);
