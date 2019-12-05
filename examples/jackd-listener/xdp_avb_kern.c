@@ -113,8 +113,18 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	nh.pos = data;
 
 	int nh_type = parse_ethhdr(&nh, data_end, &eth);
+	rec->nh_type = nh_type;
 	
     if( nh_type == bpf_htons(ETH_P_TSN) ){
+        /*debugging*/
+        rec->listen_dst_mac[0] = eth->h_dest[0];
+        rec->listen_dst_mac[1] = eth->h_dest[1];
+        rec->listen_dst_mac[2] = eth->h_dest[2];
+        rec->listen_dst_mac[3] = eth->h_dest[3];
+        rec->listen_dst_mac[4] = eth->h_dest[4];
+        rec->listen_dst_mac[5] = eth->h_dest[5];
+        /*debugging*/
+            
         if( (listen_dst_mac[0] == eth->h_dest[0])
                     && (listen_dst_mac[1] == eth->h_dest[1])
                     && (listen_dst_mac[2] == eth->h_dest[2])
@@ -124,6 +134,19 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
             seventeen22_header_t *hdr1722;
             __u8 proto1722 = parse_1722hdr(&nh, data_end, &hdr1722);
+            
+            /*debugging*/
+            rec->listen_stream_id[0] = hdr1722->stream_id[0];
+            rec->listen_stream_id[1] = hdr1722->stream_id[1];
+            rec->listen_stream_id[2] = hdr1722->stream_id[2];
+            rec->listen_stream_id[3] = hdr1722->stream_id[3];
+            rec->listen_stream_id[4] = hdr1722->stream_id[4];
+            rec->listen_stream_id[5] = hdr1722->stream_id[5];
+            rec->listen_stream_id[6] = hdr1722->stream_id[6];
+            rec->listen_stream_id[7] = hdr1722->stream_id[7];
+            rec->proto1722 = proto1722;
+            /*debugging*/
+            
             if( 0xff == proto1722)
                 return XDP_PASS;
             if( bpf_htons(proto1722) == 0x00
@@ -138,6 +161,8 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
                 six1883_header_t *hdr61883;
                 __u8 audioChannels = parse_61883hdr(&nh, data_end, &hdr61883);
+                rec->audioChannels = audioChannels;
+                /*debugging*/
                 if( 0xff == audioChannels )
                     return XDP_DROP;
 

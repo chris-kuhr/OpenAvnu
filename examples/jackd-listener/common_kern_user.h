@@ -11,6 +11,11 @@
 struct datarec{
 	__u64 accu_rx_timestamp;
 	__u32 rx_pkt_cnt;
+	int nh_type;
+	__u8 listen_dst_mac[6];
+	__u8 listen_stream_id[8];
+	__u8 proto1722;
+	__u8 audioChannels;
 	int sampleCounter;
 	int sampleBuffer[AUDIO_CHANNELS][SAMPLEBUF_SIZE*2];//+SAMPLEBUF_SIZE/4];
 };
