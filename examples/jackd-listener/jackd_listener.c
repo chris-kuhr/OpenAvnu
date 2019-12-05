@@ -44,7 +44,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "./common/common_params.h"
 #include "./common/common_user_bpf_xdp.h"
 #include "common_kern_user.h"
-#include "bpf_util.h" /* bpf_num_possible_cpus */
+#include "./header/bpf_util.h" /* bpf_num_possible_cpus */
 
 #include "listener_mrp_client.h"
 
