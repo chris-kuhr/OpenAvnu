@@ -396,6 +396,25 @@ int receive_avtp_packet(
 
 #ifdef AVB_XDP
 
+
+    uint64_t packet_arrival_time_ns = 0;
+       // Packet Arrival Time from Device
+    cmsg = CMSG_FIRSTHDR(&msg);
+    while( cmsg != NULL ) {
+        if( cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMPING ) {
+            struct timespec *ts_device, *ts_system;
+            ts_system = ((struct timespec *) CMSG_DATA(cmsg)) + 1;
+            ts_device = ts_system + 1;
+            packet_arrival_time_ns =  (ts_device->tv_sec*1000000000LL + ts_device->tv_nsec);
+            if( ts_cnt < NUM_TS )
+                timestamps[ts_cnt++] = packet_arrival_time_ns;
+            break;
+        }
+        cmsg = CMSG_NXTHDR(&msg,cmsg);
+    }
+    fprintf(stdout, "Rx Timestamp %x \n", packet_arrival_time_ns);
+        
+        
 //    prev = record; /* struct copy */
 //    /* Collect other XDP actions stats  */
 //    __u32 key = XDP_PASS;
@@ -446,26 +465,6 @@ int receive_avtp_packet(
         (glob_stream_id[6] == (uint8_t) stream_packet[24]) &&
         (glob_stream_id[7] == (uint8_t) stream_packet[25])
     ){
-
-        uint64_t packet_arrival_time_ns = 0;
-           // Packet Arrival Time from Device
-        cmsg = CMSG_FIRSTHDR(&msg);
-        while( cmsg != NULL ) {
-            if( cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMPING ) {
-                struct timespec *ts_device, *ts_system;
-                ts_system = ((struct timespec *) CMSG_DATA(cmsg)) + 1;
-                ts_device = ts_system + 1;
-                packet_arrival_time_ns =  (ts_device->tv_sec*1000000000LL + ts_device->tv_nsec);
-                if( ts_cnt < NUM_TS )
-                    timestamps[ts_cnt++] = packet_arrival_time_ns;
-                break;
-            }
-            cmsg = CMSG_NXTHDR(&msg,cmsg);
-        }
-        fprintf(stdout, "Rx Timestamp %x \nn", packet_arrival_time_ns);
-
-
-
         mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
 
         for(int i = 0; i < SAMPLES_PER_FRAME * CHANNELS; i+=CHANNELS) {

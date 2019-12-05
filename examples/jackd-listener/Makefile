@@ -47,7 +47,7 @@ LIBS = -l:libbpf.a -lelf -ljack -lpthread
 
 .PHONY: clean loader $(XDP_OBJ)
 
-all: $(XDP_OBJ) loader jackd_listener
+all: $(XDP_OBJ) loader $(USER_TARGETS)
 #$(USER_TARGETS) 
 
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
@@ -69,9 +69,8 @@ $(COMMON_OBJS): %.o: %.h
 
 #%.o: %.c $(OBJECT_LIBBPF) Makefile $(COMMON_MK) $(COMMON_OBJS) $(KERN_USER_H)  
 
-#$(USER_TARGETS): 
-jackd_listener:
-	$(CC) -Wall $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) -o $@ jackd_listener.c  avb_sockets.c  $(MRPLISTENER_TARGETS) $(COMMON_OBJS) $(LIBS) 
+$(USER_TARGETS): 
+	$(CC) -Wall $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) -o $@ $(USER_TARGETS).c  avb_sockets.c  $(MRPLISTENER_TARGETS) $(COMMON_OBJS) $(LIBS) 
 
 	 
 	 
@@ -102,5 +101,5 @@ $(XDP_OBJ): %.o: %.c  Makefile $(COMMON_MK)
 	
 clean:
 	make -C loader clean
-	$(RM) jack_listener
+	$(RM) $(USER_TARGETS)
 	$(RM) `find . -name "*~" -o -name "*.[oa]" -o -name "\#*\#" -o -name TAGS -o -name core -o -name "*.orig"`
