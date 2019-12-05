@@ -629,12 +629,7 @@ int main(int argc, char *argv[])
 		.ifindex   = -1,
 		.do_unload = false,
 	};
-
-	struct config cfg = {
-		.xdp_flags = XDP_FLAGS_UPDATE_IF_NOEXIST | XDP_FLAGS_DRV_MODE,
-		.ifindex   = -1,
-		.do_unload = false,
-	};
+	
 	/* Set default BPF-ELF object file and BPF program name */
 	strncpy(cfg.filename, default_filename, sizeof(cfg.filename));
 	strncpy(cfg.progsec,  default_progsec,  sizeof(cfg.progsec));
