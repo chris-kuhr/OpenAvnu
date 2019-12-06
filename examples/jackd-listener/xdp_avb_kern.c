@@ -149,7 +149,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                 __u32 *avtpSamples = (__u32*)nh.pos;
                 
                 
-    rec->sampleCounter = data_end - avtpSamples;
+    rec->sampleCounter = (__u32*)data_end - avtpSamples;
     
                 if( avtpSamples + 6*AUDIO_CHANNELS > data_end)
                     return XDP_PASS;
