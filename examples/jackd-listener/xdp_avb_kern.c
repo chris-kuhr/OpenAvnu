@@ -117,7 +117,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
     rec->accu_rx_timestamp = nh_type;
     rec->rx_pkt_cnt = bpf_htons(ETH_P_TSN);
     
-    if( nh_type == bpf_htons(ETH_P_TSN) ){
+   /* if( nh_type == bpf_htons(ETH_P_TSN) ){
             
         if( (listen_dst_mac[0] == eth->h_dest[0])
                     && (listen_dst_mac[1] == eth->h_dest[1])
@@ -177,7 +177,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                 }
             }
         }
-    }
+    }*/
 
     return XDP_PASS;
 }
