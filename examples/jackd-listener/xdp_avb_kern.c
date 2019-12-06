@@ -114,10 +114,8 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
 	int nh_type = parse_ethhdr(&nh, data_end, &eth);
 	
-    rec->accu_rx_timestamp = nh_type;
-    rec->rx_pkt_cnt = bpf_htons(ETH_P_TSN);
     
-   /* if( nh_type == bpf_htons(ETH_P_TSN) ){
+    if( nh_type == bpf_htons(ETH_P_TSN) ){
             
         if( (listen_dst_mac[0] == eth->h_dest[0])
                     && (listen_dst_mac[1] == eth->h_dest[1])
@@ -141,15 +139,32 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                         && (listen_stream_id[6] == hdr1722->stream_id[6])
                         && (listen_stream_id[7] == hdr1722->stream_id[7]) ){
 
+
+    rec->accu_rx_timestamp = nh_type;
+    rec->rx_pkt_cnt = bpf_htons(ETH_P_TSN);
+    
+    
                 six1883_header_t *hdr61883;
                 __u8 audioChannels = parse_61883hdr(&nh, data_end, &hdr61883);
                 if( 0xff == audioChannels )
-                    return XDP_DROP;
+                    return XDP_PASS;
+//                    return XDP_DROP;
 
+
+    rec->accu_rx_timestamp = 2;
+    rec->rx_pkt_cnt = 2;
+    
+    
                 __u32 *avtpSamples = (__u32*)nh.pos;
                 if( avtpSamples + 6*AUDIO_CHANNELS > data_end)
-                    return XDP_DROP;
+                    return XDP_PASS;
+//                    return XDP_DROP;
 
+
+    rec->accu_rx_timestamp = 3;
+    rec->rx_pkt_cnt = 3;
+    
+    
                 int i,j;
                 #pragma unroll
                 for(j=0; j<AUDIO_CHANNELS;j++){
@@ -157,7 +172,8 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                     #pragma unroll
                     for(i=0; i<6*AUDIO_CHANNELS;i+=AUDIO_CHANNELS){
                         if( !avtpSamples[i+j] )
-                            return XDP_DROP;
+                            return XDP_PASS;
+        //                    return XDP_DROP;
                         __u32 sample = bpf_htonl(avtpSamples[i+j]) & 0x00ffffff;
                         sample <<= 8;
                         rec->sampleBuffer[j][i] = (int) sample;// use tail here
@@ -173,7 +189,8 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                     return XDP_PASS;
                 } else {
                     rec->accu_rx_timestamp = 0xeeeeeeee;
-                    return XDP_DROP;
+                    return XDP_PASS;
+//                    return XDP_DROP;
                 }
             }
         }
