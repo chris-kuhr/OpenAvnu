@@ -172,7 +172,8 @@ static bool map_collect(int fd, __u32 map_type, __u32 key, struct record *rec)
 
 	/* Add byte counters */
 	rec->total.rx_pkt_cnt = value.rx_pkt_cnt;
-	fprintf(stderr, "Packet Counter %d\n", value.rx_pkt_cnt);
+	rec->total.accu_rx_timestamp = value.accu_rx_timestamp;
+	fprintf(stderr, "Packet Counter %d accu tx %lx \n", value.rx_pkt_cnt, value.accu_rx_timestamp);
 	return true;
 }
 
@@ -351,9 +352,6 @@ int receive_avtp_packet(
 
 
     fprintf(stdout, "Rx Timestamp %lx -> %d\n", packet_arrival_time_ns, rec->total.rx_pkt_cnt);
-    
-    
-//    int64_t diff = rec->total.rx_pkt_cnt
 
     mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
 
@@ -386,6 +384,13 @@ int receive_avtp_packet(
             ready = 1;
         }
     }
+    
+    
+    
+    
+    
+    
+    
 #else
     if( // Compare Stream IDs
         (glob_stream_id[0] == (uint8_t) stream_packet[18]) &&
@@ -428,6 +433,12 @@ int receive_avtp_packet(
         }
     }
 #endif // AVB_XDP
+
+
+
+
+
+
     return 0;
 }
 
