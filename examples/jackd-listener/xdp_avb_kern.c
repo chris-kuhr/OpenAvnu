@@ -164,13 +164,12 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
 
                 rec->rx_pkt_cnt++;
-                if( rec->rx_pkt_cnt % SAMPLEBUF_SIZE == 0 ){
+                if( rec->rx_pkt_cnt == SAMPLEBUF_PACKET_RATIO ){
                     rec->accu_rx_timestamp = 0x12345678;
                     return XDP_PASS;
                 } else {
                     rec->accu_rx_timestamp = 0xeeeeeeee;
-                    return XDP_PASS;
-//                    return XDP_DROP;
+                    return XDP_DROP;
                 }
             }
         }
