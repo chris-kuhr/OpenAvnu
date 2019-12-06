@@ -95,7 +95,7 @@ SEC("xdp_avtp")
 int  xdp_avtp_func(struct xdp_md *ctx)
 {
 
-	eth_headerQ_t *eth;
+	eth_header_t *eth;
     __u8 listen_dst_mac[6] =     {0x91,0xe0,0xf0,0x00,0x03,0x01};
     __u8 listen_stream_id[8] =   {0x00,0x00,0x00,0x00,0x03,0x01,0x00,0x00};
 	void *data_end = (void *)(long)ctx->data_end;
