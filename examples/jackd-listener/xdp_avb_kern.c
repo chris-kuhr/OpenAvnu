@@ -107,7 +107,6 @@ int  xdp_avtp_func(struct xdp_md *ctx)
     rec = bpf_map_lookup_elem(&xdp_stats_map, &key);
     if (!rec) return XDP_ABORTED;
 
-    rec->accu_rx_timestamp = 0xffffffff;
 
 	struct hdr_cursor nh;
     //Start next header cursor position at data start
@@ -115,6 +114,9 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
 	int nh_type = parse_ethhdr(&nh, data_end, &eth);
 	
+    rec->accu_rx_timestamp = nh_type;
+    rec->rx_pkt_cnt = bpf_htons(ETH_P_TSN);
+    
     if( nh_type == bpf_htons(ETH_P_TSN) ){
             
         if( (listen_dst_mac[0] == eth->h_dest[0])
