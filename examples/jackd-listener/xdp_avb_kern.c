@@ -107,6 +107,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
     rec = bpf_map_lookup_elem(&xdp_stats_map, &key);
     if (!rec) return XDP_ABORTED;
 
+    rec->accu_rx_timestamp = 0xffffffff;
 
 	struct hdr_cursor nh;
     //Start next header cursor position at data start
@@ -166,9 +167,10 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
                 rec->rx_pkt_cnt++;
                 if( rec->rx_pkt_cnt % SAMPLEBUF_SIZE == 0 ){
-                    rec->accu_rx_timestamp = 0x123456789;
+                    rec->accu_rx_timestamp = 0x12345678;
                     return XDP_PASS;
                 } else {
+                    rec->accu_rx_timestamp = 0xeeeeeeee;
                     return XDP_DROP;
                 }
             }
