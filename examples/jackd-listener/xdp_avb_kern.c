@@ -33,9 +33,9 @@ struct hdr_cursor {
  * returns the type of its contents if successful, and -1 otherwise..
  */
 static __always_inline __u16 parse_ethhdr(struct hdr_cursor *nh,
-					void *data_end, eth_headerQ_t **ethhdr)
+					void *data_end, eth_header_t **ethhdr)
 {
-	eth_headerQ_t *eth = nh->pos;
+	eth_header_t *eth = nh->pos;
 	int hdrsize = sizeof(*eth);
 
 	if (nh->pos + hdrsize > data_end)
