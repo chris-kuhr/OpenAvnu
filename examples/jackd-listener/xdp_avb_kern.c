@@ -158,10 +158,6 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                 if( avtpSamples + 6*AUDIO_CHANNELS > data_end)
                     return XDP_PASS;
 //                    return XDP_DROP;
-
-
-    rec->accu_rx_timestamp = 3;
-    rec->rx_pkt_cnt = 3;
     
     
                 int i,j;
@@ -182,7 +178,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
 
 
-                rec->rx_pkt_cnt++;
+                //rec->rx_pkt_cnt++;
                 if( rec->rx_pkt_cnt % SAMPLEBUF_SIZE == 0 ){
                     rec->accu_rx_timestamp = 0x12345678;
                     return XDP_PASS;
