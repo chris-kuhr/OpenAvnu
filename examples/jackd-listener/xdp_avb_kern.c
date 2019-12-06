@@ -73,7 +73,7 @@ static __always_inline __u8 parse_61883hdr(struct hdr_cursor *nh,
 	 * is after data_end.
 	 */
 	if (nh->pos + hdrsize > data_end)
-		return 0xff;
+		return 0xef;
 
     if( nh->pos + hdrsize +  tmp_hdr61883->data_block_continuity * 4 > data_end)
 		return 0xff;
@@ -141,18 +141,17 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
 
     rec->accu_rx_timestamp = nh_type;
-    rec->rx_pkt_cnt = bpf_htons(ETH_P_TSN);
+    rec->rx_pkt_cnt = ETH_P_TSN;
     
     
                 six1883_header_t *hdr61883;
                 __u8 audioChannels = parse_61883hdr(&nh, data_end, &hdr61883);
-                if( 0xff == audioChannels )
-                    return XDP_PASS;
+//                if( 0xff == audioChannels )
+//                    return XDP_PASS;
 //                    return XDP_DROP;
 
 
-    rec->accu_rx_timestamp = 2;
-    rec->rx_pkt_cnt = 2;
+    rec->sampleCounter = audioChannels;
     
     
                 __u32 *avtpSamples = (__u32*)nh.pos;
