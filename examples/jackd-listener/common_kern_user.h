@@ -6,7 +6,7 @@
 
 #define AUDIO_CHANNELS 2
 #define SAMPLEBUF_SIZE 128
-#define SAMPLEBUF_PACKET_RATIO 20
+#define SAMPLEBUF_PACKET_RATIO 21
 
 /* This is the data record stored in the map */
 struct datarec{
