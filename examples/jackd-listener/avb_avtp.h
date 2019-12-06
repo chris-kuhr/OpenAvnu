@@ -9,16 +9,14 @@
 
 #define ETH_ALEN   6 /* Size of Ethernet address */
 
-typedef struct eth_headerQ {
+typedef struct eth_header {
 	/* Destination MAC address. */
 	__u8 h_dest [ETH_ALEN];
 	/* Destination MAC address. */
 	__u8 h_source [ETH_ALEN];
-	/* VLAN */
-	__u8 h_vlan[4];
 	/* Protocol ID. */
 	__u16 h_protocol;
-} eth_headerQ_t;
+} eth_header_t;
 
 typedef struct seventeen22_header {
 	__u8 subtype_cd;
