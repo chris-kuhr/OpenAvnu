@@ -75,8 +75,8 @@ static __always_inline __u8 parse_61883hdr(struct hdr_cursor *nh,
 	if (nh->pos + hdrsize > data_end)
 		return 0xef;
 
-    if( nh->pos + hdrsize +  tmp_hdr61883->data_block_continuity * 4 > data_end)
-		return 0xff;
+//    if( nh->pos + hdrsize +  tmp_hdr61883->data_block_continuity * 4 > data_end)
+//		return 0xff;
 
 	nh->pos += hdrsize;
 	*hdr61883 = tmp_hdr61883;
@@ -141,7 +141,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
 
     rec->accu_rx_timestamp = nh_type;
-    rec->rx_pkt_cnt = ETH_P_TSN;
+    rec->rx_pkt_cnt = bpf_htons(ETH_P_TSN);
     
     
                 six1883_header_t *hdr61883;

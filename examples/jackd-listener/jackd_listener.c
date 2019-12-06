@@ -174,7 +174,7 @@ static bool map_collect(int fd, __u32 map_type, __u32 key, struct record *rec)
 	rec->total.rx_pkt_cnt = value.rx_pkt_cnt;
 	rec->total.accu_rx_timestamp = value.accu_rx_timestamp;
 	rec->total.sampleCounter = value.sampleCounter;
-	fprintf(stderr, "Packet Counter %d accu tx %lx channels %x\n", value.rx_pkt_cnt, value.accu_rx_timestamp, value.sampleCounter);
+	fprintf(stderr, "Packet Counter %x accu tx %lx channels %x\n", value.rx_pkt_cnt, value.accu_rx_timestamp, value.sampleCounter);
 	return true;
 }
 
@@ -352,7 +352,7 @@ int receive_avtp_packet(
     rec  = &record->stats[0];
 
 
-    fprintf(stdout, "Rx Timestamp %lx -> %d\n", packet_arrival_time_ns, rec->total.rx_pkt_cnt);
+    fprintf(stdout, "Rx Timestamp %lx -> %x\n", packet_arrival_time_ns, rec->total.rx_pkt_cnt);
 
     mybuf = (uint32_t*) (stream_packet + HEADER_SIZE);
 
