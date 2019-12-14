@@ -109,9 +109,9 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
 	int nh_type = parse_ethhdr(&nh, data_end, &eth);
 	
-	if( nh_type == 0xffff ) return XDP_ABORTED;
+	if( nh_type == 0xffff ) return PASS;//XDP_ABORTED;
     
-    if( listen_dst_mac[0] == eth->h_dest[1]
+    if( listen_dst_mac[0] == eth->h_dest[0]
     /*
                 && (listen_dst_mac[1] == eth->h_dest[1])
                 && (listen_dst_mac[2] == eth->h_dest[2])
