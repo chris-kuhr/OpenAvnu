@@ -24,7 +24,7 @@ typedef struct eth_q_header {
 	/* Destination MAC address. */
 	__u8 h_source [ETH_ALEN];
 	/* VLAN */
-	__u16 h_vlan [4];
+	__u16 h_vlan [2];
 	/* Protocol ID. */
 	__u16 h_protocol;
 } eth_header_q_t;
