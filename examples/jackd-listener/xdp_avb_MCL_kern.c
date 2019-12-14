@@ -84,7 +84,8 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                 && (listen_dst_mac[2] == *((__u8*)data + 2))
                 && (listen_dst_mac[3] == *((__u8*)data + 3))
                 && (listen_dst_mac[4] == *((__u8*)data + 4))
-                && (listen_dst_mac[5] == *((__u8*)data + 5)) ){
+                //&& (listen_dst_mac[5] == *((__u8*)data + 5)) 
+                ){
 	/*int nh_type = parse_ethhdr(&nh, data_end, &eth);
 	    
 
