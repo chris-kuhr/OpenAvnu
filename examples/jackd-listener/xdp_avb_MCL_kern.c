@@ -62,7 +62,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	//eth_header_q_t *eth;
     __u8 listen_dst_mac[6] =     {0x91,0xe0,0xf0,0x00,0x11,0x11};
  //   __u8 listen_stream_id[8] =   {0x00,0x22,0x97,0x00,0x41,0x2c,0x00,0x00};
-	//void *data_end = (void *)(long)ctx->data_end;
+	void *data_end = (void *)(long)ctx->data_end;
 	void *data = (void *)(long)ctx->data;
 	//struct datarec *rec = NULL;
 
@@ -75,9 +75,9 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	struct hdr_cursor nh;
     //Start next header cursor position at data start
 	nh.pos = data;
-/*	if( ((__u8*)data + 5) > data_end ){
+	if( ((__u8*)data) > data_end ){
 	    return XDP_ABORTED;
-	}*/
+	}
 
     if( listen_dst_mac[0] == *((__u8*)data) 
                /* && (listen_dst_mac[1] == *((__u8*)data + 1))
