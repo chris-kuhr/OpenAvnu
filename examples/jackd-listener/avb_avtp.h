@@ -18,7 +18,7 @@ typedef struct eth_header {
 	__u16 h_protocol;
 } eth_header_t;
 
-typedef struct eth_header {
+typedef struct eth_q_header {
 	/* Destination MAC address. */
 	__u8 h_dest [ETH_ALEN];
 	/* Destination MAC address. */
@@ -27,7 +27,7 @@ typedef struct eth_header {
 	__u8 h_vlan [2];
 	/* Protocol ID. */
 	__u16 h_protocol;
-} eth_header_t;
+} eth_header_q_t;
 
 typedef struct seventeen22_header {
 	__u8 subtype_cd;
