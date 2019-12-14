@@ -85,8 +85,15 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                 && (listen_dst_mac[4] == eth->h_dest[4])
                 && (listen_dst_mac[5] == eth->h_dest[5]) ){
         if( nh_type == bpf_htons(0x22f0) || nh_type == 0x22f0){
-               return XDP_PASS;
-
+            
+            rec->rx_pkt_cnt++;
+            if( rec->rx_pkt_cnt % SAMPLEBUF_PACKET_RATIO == 0){
+                rec->accu_rx_timestamp = 0x12345678;
+                return XDP_PASS;
+            } else {
+                rec->accu_rx_timestamp = 0xeeeeeeee;
+                return XDP_DROP;
+            }
         } 
     }
     return XDP_DROP;
