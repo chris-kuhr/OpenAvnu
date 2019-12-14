@@ -93,8 +93,8 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 {
 
 	eth_header_t *eth;
-    __u8 listen_dst_mac[6] =     {0x91,0xe0,0xf0,0x00,0x03,0x01};
-    __u8 listen_stream_id[8] =   {0x00,0x00,0x00,0x00,0x03,0x01,0x00,0x00};
+    __u8 listen_dst_mac[6] =     {0x91,0xe0,0xf0,0x00,0x11,0x11};
+    __u8 listen_stream_id[8] =   {0x00,0x22,0x97,0x00,0x41,0x2c,0x00,0x00};
 	void *data_end = (void *)(long)ctx->data_end;
 	void *data = (void *)(long)ctx->data;
 	struct datarec *rec = NULL;
@@ -125,7 +125,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
             __u8 proto1722 = parse_1722hdr(&nh, data_end, &hdr1722);
                 
             if( 0xff == proto1722)
-                return XDP_PASS;
+                return XDP_DROP;
             if( bpf_htons(proto1722) == 0x00
                         && (listen_stream_id[0] == hdr1722->stream_id[0])
                         && (listen_stream_id[1] == hdr1722->stream_id[1])
