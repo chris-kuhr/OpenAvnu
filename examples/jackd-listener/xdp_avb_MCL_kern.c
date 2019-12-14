@@ -111,7 +111,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	
 	if( nh_type == 0xffff ) return XDP_ABORTED;
     
-    if( listen_dst_mac[0] == eth->h_dest[0]/*
+    if( listen_dst_mac[0] == eth->h_dest[1]/*
                 && (listen_dst_mac[1] == eth->h_dest[1])
                 && (listen_dst_mac[2] == eth->h_dest[2])
                 && (listen_dst_mac[3] == eth->h_dest[3])
