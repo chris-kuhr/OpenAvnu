@@ -119,7 +119,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                 && (listen_dst_mac[4] == eth->h_dest[4])
                 && (listen_dst_mac[5] == eth->h_dest[5]) 
         ){
-        return XDP_PASS;
+        //return XDP_PASS;
         //if( nh_type == bpf_htons(ETH_P_TSN) ||  nh_type == ETH_P_TSN ){
             
 
