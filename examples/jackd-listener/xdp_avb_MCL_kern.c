@@ -33,9 +33,9 @@ struct hdr_cursor {
  * returns the type of its contents if successful, and -1 otherwise..
  */
 static __always_inline __u16 parse_ethhdr(struct hdr_cursor *nh,
-					void *data_end, eth_header_t **ethhdr)
+					void *data_end, eth_header_q_t **ethhdr)
 {
-	eth_header_t *eth = nh->pos;
+	eth_header_q_t *eth = nh->pos;
 	int hdrsize = sizeof(*eth);
 
 	if (nh->pos + hdrsize > data_end)
@@ -92,7 +92,7 @@ SEC("xdp_avtp")
 int  xdp_avtp_func(struct xdp_md *ctx)
 {
 
-	eth_header_t *eth;
+	eth_header_q_t *eth;
     __u8 listen_dst_mac[6] =     {0x91,0xe0,0xf0,0x00,0x11,0x11};
     __u8 listen_stream_id[8] =   {0x00,0x22,0x97,0x00,0x41,0x2c,0x00,0x00};
 	void *data_end = (void *)(long)ctx->data_end;
