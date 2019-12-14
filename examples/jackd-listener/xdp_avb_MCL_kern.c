@@ -75,7 +75,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	struct hdr_cursor nh;
     //Start next header cursor position at data start
 	nh.pos = data;
-	if( ((__u8*)data + 5)) > data_end ){
+	if( ((__u8*)data + 5) > data_end ){
 	    return XDP_ABORTED;
 	}
 
