@@ -67,9 +67,9 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	//struct datarec *rec = NULL;
 
     //     Lookup in kernel BPF-side return pointer to actual data record
-    //__u32 key = XDP_PASS;
-    //rec = bpf_map_lookup_elem(&xdp_stats_map, &key);
-    //if (!rec) return XDP_ABORTED;
+    __u32 key = XDP_PASS;
+    rec = bpf_map_lookup_elem(&xdp_stats_map, &key);
+    if (!rec) return XDP_ABORTED;
 
 
 	struct hdr_cursor nh;
