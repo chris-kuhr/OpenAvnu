@@ -47,7 +47,7 @@ static __always_inline __u16 parse_ethhdr(struct hdr_cursor *nh,
 	return eth->h_protocol ; // network-byte-order
 }
 
-/*static __always_inline __u8 parse_1722hdr(struct hdr_cursor *nh,
+static __always_inline __u8 parse_1722hdr(struct hdr_cursor *nh,
 					void *data_end, seventeen22_header_t **hdr1722)
 {
     seventeen22_header_t *tmp_hdr1722 = nh->pos;
@@ -76,7 +76,7 @@ static __always_inline __u8 parse_61883hdr(struct hdr_cursor *nh,
 	*hdr61883 = tmp_hdr61883;
 
 	return tmp_hdr61883->data_block_size; 
-}*/
+}
 
 
 // LLVM maps __sync_fetch_and_add() as a built-in function to the BPF atomic add
@@ -92,7 +92,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 
 	eth_header_t *eth;
     __u8 listen_dst_mac[6] =     {0x91,0xe0,0xf0,0x11,0x11,0x11};
- //   __u8 listen_stream_id[8] =   {0x00,0x22,0x97,0x00,0x41,0x2c,0x00,0x00};
+    __u8 listen_stream_id[8] =   {0x00,0x22,0x97,0x00,0x41,0x2c,0x00,0x00};
 	void *data_end = (void *)(long)ctx->data_end;
 	void *data = (void *)(long)ctx->data;
 	struct datarec *rec = NULL;
@@ -119,10 +119,10 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                 && (listen_dst_mac[5] == eth->h_dest[5]) 
         ){
         //return XDP_PASS;
-        //if( nh_type == bpf_htons(ETH_P_TSN) ||  nh_type == ETH_P_TSN ){
+        if( nh_type == bpf_htons(ETH_P_TSN) ||  nh_type == ETH_P_TSN ){
             
 
-           /* seventeen22_header_t *hdr1722;
+            seventeen22_header_t *hdr1722;
             __u8 proto1722 = parse_1722hdr(&nh, data_end, &hdr1722);
                 
             if( 0xff == proto1722)
@@ -160,7 +160,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                         rec->sampleBuffer[j][i] = (int) sample;// use tail here
                         rec->sampleCounter++;
                     }
-                }*/
+                }
 
 
 
@@ -172,8 +172,8 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                     rec->accu_rx_timestamp = 0xeeeeeeee;
                     return XDP_DROP;
                 }
-            //}
-        //}
+            }
+        }
     }
     
     return XDP_PASS;
