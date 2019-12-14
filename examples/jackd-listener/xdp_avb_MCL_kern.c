@@ -175,7 +175,8 @@ int  xdp_avtp_func(struct xdp_md *ctx)
         }
     }
 
-    return XDP_PASS;
+    return XDP_DROP;
+    //return XDP_PASS;
 }
 
 char _license[] SEC("license") = "GPL";
