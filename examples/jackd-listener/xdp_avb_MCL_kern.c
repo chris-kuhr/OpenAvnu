@@ -44,7 +44,7 @@ struct hdr_cursor {
 	nh->pos += hdrsize;
 	*ethhdr = eth;
 
-	return eth->h_protocol ; /* network-byte-order */
+	return eth->h_protocol ; // network-byte-order
 }*/
 
 
