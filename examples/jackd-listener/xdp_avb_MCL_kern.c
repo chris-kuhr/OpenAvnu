@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+// SPDX-License-Identifier: GPL-2.0
 #include <stddef.h>
 #include <linux/bpf.h>
 #include <linux/in.h>
@@ -10,12 +10,12 @@
 #include "bpf_endian.h"
 
 #include "avb_avtp.h"
-#include "common_kern_user.h" /* defines: struct datarec; */
+#include "common_kern_user.h" // defines: struct datarec;
 
 
-/* - Here an array with XDP_ACTION_MAX (max_)entries are created.
- * - The idea is to keep stats per (enum) xdp_action
- */
+// - Here an array with XDP_ACTION_MAX (max_)entries are created.
+// - The idea is to keep stats per (enum) xdp_action
+//
 struct bpf_map_def SEC("maps") xdp_stats_map = {
 	.type        = BPF_MAP_TYPE_ARRAY,
 	.key_size    = sizeof(__u32),
@@ -23,15 +23,15 @@ struct bpf_map_def SEC("maps") xdp_stats_map = {
 	.max_entries = XDP_ACTION_MAX,
 };
 
-/* Header cursor to keep track of current parsing position */
+// Header cursor to keep track of current parsing position
 struct hdr_cursor {
 	void *pos;
 };
 
-/* Packet parsing helpers.
- * Each helper parses a packet header, including doing bounds checking, and
- * returns the type of its contents if successful, and -1 otherwise..
- */
+// Packet parsing helpers.
+// Each helper parses a packet header, including doing bounds checking, and
+// returns the type of its contents if successful, and -1 otherwise..
+//
 static __always_inline __u16 parse_ethhdr(struct hdr_cursor *nh,
 					void *data_end, eth_header_q_t **ethhdr)
 {
@@ -47,7 +47,7 @@ static __always_inline __u16 parse_ethhdr(struct hdr_cursor *nh,
 	return eth->h_protocol ; // network-byte-order
 }
 
-static __always_inline __u8 parse_1722hdr(struct hdr_cursor *nh,
+/*static __always_inline __u8 parse_1722hdr(struct hdr_cursor *nh,
 					void *data_end, seventeen22_header_t **hdr1722)
 {
     seventeen22_header_t *tmp_hdr1722 = nh->pos;
@@ -59,7 +59,7 @@ static __always_inline __u8 parse_1722hdr(struct hdr_cursor *nh,
 	nh->pos += hdrsize;
 	*hdr1722 = tmp_hdr1722;
 
-	return tmp_hdr1722->subtype_cd & 0x7F; /* network-byte-order */
+	return tmp_hdr1722->subtype_cd & 0x7F; 
 }
 
 static __always_inline __u8 parse_61883hdr(struct hdr_cursor *nh,
@@ -69,22 +69,19 @@ static __always_inline __u8 parse_61883hdr(struct hdr_cursor *nh,
 
 	int hdrsize = sizeof(*tmp_hdr61883);
 
-	/* Byte-count bounds check; check if current pointer + size of header
-	 * is after data_end.
-	 */
 	if (nh->pos + hdrsize > data_end)
 		return 0xff;
 
 	nh->pos += hdrsize;
 	*hdr61883 = tmp_hdr61883;
 
-	return tmp_hdr61883->data_block_size; /* network-byte-order */
-}
+	return tmp_hdr61883->data_block_size; 
+}*/
 
 
-/* LLVM maps __sync_fetch_and_add() as a built-in function to the BPF atomic add
- * instruction (that is BPF_STX | BPF_XADD | BPF_W for word sizes)
- */
+// LLVM maps __sync_fetch_and_add() as a built-in function to the BPF atomic add
+// instruction (that is BPF_STX | BPF_XADD | BPF_W for word sizes)
+//
 #ifndef lock_xadd
 #define lock_xadd(ptr, val)	((void) __sync_fetch_and_add(ptr, val))
 #endif
