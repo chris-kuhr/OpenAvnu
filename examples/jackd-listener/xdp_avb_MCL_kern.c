@@ -91,7 +91,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 {
 
 	eth_header_t *eth;
-    __u8 listen_dst_mac[6] =     {0x91,0xe0,0xf0,0x00,0x11,0x11};
+    __u8 listen_dst_mac[6] =     {0x91,0xe0,0xf0,0x11,0x11,0x11};
  //   __u8 listen_stream_id[8] =   {0x00,0x22,0x97,0x00,0x41,0x2c,0x00,0x00};
 	void *data_end = (void *)(long)ctx->data_end;
 	void *data = (void *)(long)ctx->data;
@@ -112,12 +112,12 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	if( nh_type == 0xffff ) return XDP_PASS;//XDP_ABORTED;
     
     if( listen_dst_mac[0] == eth->h_dest[0]
-    /*
+    
                 && (listen_dst_mac[1] == eth->h_dest[1])
                 && (listen_dst_mac[2] == eth->h_dest[2])
                 && (listen_dst_mac[3] == eth->h_dest[3])
                 && (listen_dst_mac[4] == eth->h_dest[4])
-                && (listen_dst_mac[5] == eth->h_dest[5]) */
+                && (listen_dst_mac[5] == eth->h_dest[5]) 
         ){
         //return XDP_PASS;
         //if( nh_type == bpf_htons(ETH_P_TSN) ||  nh_type == ETH_P_TSN ){
