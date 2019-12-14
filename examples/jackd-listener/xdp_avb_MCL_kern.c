@@ -112,15 +112,16 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	int nh_type = parse_ethhdr(&nh, data_end, &eth);
 	
     
-    if( nh_type == bpf_htons(0x8100) || nh_type == 0x8100){
+//    if( nh_type == bpf_htons(0x22f0) || nh_type == 0x22f0){
 //    if( nh_type == bpf_htons(ETH_P_TSN) ){
-        return XDP_PASS;
+//        return XDP_PASS;
         if( (listen_dst_mac[0] == eth->h_dest[0])
                     && (listen_dst_mac[1] == eth->h_dest[1])
                     && (listen_dst_mac[2] == eth->h_dest[2])
                     && (listen_dst_mac[3] == eth->h_dest[3])
                     && (listen_dst_mac[4] == eth->h_dest[4])
                     && (listen_dst_mac[5] == eth->h_dest[5]) ){
+            return XDP_PASS;
 
             seventeen22_header_t *hdr1722;
             __u8 proto1722 = parse_1722hdr(&nh, data_end, &hdr1722);
@@ -174,7 +175,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                 }
             }
         }
-    }
+   // }
 
     return XDP_DROP;
     //return XDP_PASS;
