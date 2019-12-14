@@ -89,6 +89,8 @@ int  xdp_avtp_func(struct xdp_md *ctx)
         if( nh_type == bpf_htons(0x22f0) || nh_type == 0x22f0){
                return XDP_PASS;
 
+        } else {
+               return XDP_PASS;
         }
     }
 
