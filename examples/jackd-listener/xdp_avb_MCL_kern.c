@@ -90,7 +90,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
                return XDP_PASS;
 
         } else {
-               return XDP_PASS;
+               return XDP_DROP;
         }
     }
 
