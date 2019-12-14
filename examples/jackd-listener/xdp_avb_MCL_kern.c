@@ -114,12 +114,13 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	
 	if( nh_type == 0xffff ) return XDP_ABORTED;
     
-    if( (listen_dst_mac[0] == eth->h_dest[0])
+    if( listen_dst_mac[0] == eth->h_dest[0]/*
                 && (listen_dst_mac[1] == eth->h_dest[1])
                 && (listen_dst_mac[2] == eth->h_dest[2])
                 && (listen_dst_mac[3] == eth->h_dest[3])
                 && (listen_dst_mac[4] == eth->h_dest[4])
-                && (listen_dst_mac[5] == eth->h_dest[5]) ){
+                && (listen_dst_mac[5] == eth->h_dest[5]) */){
+        return XDP_PASS;
         if( nh_type == bpf_htons(ETH_P_TSN) ||  nh_type == ETH_P_TSN ){
             
 
