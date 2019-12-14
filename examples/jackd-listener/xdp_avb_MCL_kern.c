@@ -47,6 +47,40 @@ static __always_inline __u16 parse_ethhdr(struct hdr_cursor *nh,
 	return eth->h_protocol ; // network-byte-order
 }
 
+static __always_inline __u8 parse_1722hdr(struct hdr_cursor *nh,
+					void *data_end, seventeen22_header_t **hdr1722)
+{
+    seventeen22_header_t *tmp_hdr1722 = nh->pos;
+	int hdrsize = sizeof(*tmp_hdr1722);
+
+	if (nh->pos + hdrsize > data_end)
+		return 0xff;
+
+	nh->pos += hdrsize;
+	*hdr1722 = tmp_hdr1722;
+
+	return tmp_hdr1722->subtype_cd & 0x7F; /* network-byte-order */
+}
+
+static __always_inline __u8 parse_61883hdr(struct hdr_cursor *nh,
+					void *data_end, six1883_header_t **hdr61883)
+{
+	six1883_header_t *tmp_hdr61883 = nh->pos;
+
+	int hdrsize = sizeof(*tmp_hdr61883);
+
+	/* Byte-count bounds check; check if current pointer + size of header
+	 * is after data_end.
+	 */
+	if (nh->pos + hdrsize > data_end)
+		return 0xff;
+
+	nh->pos += hdrsize;
+	*hdr61883 = tmp_hdr61883;
+
+	return tmp_hdr61883->data_block_size; /* network-byte-order */
+}
+
 
 /* LLVM maps __sync_fetch_and_add() as a built-in function to the BPF atomic add
  * instruction (that is BPF_STX | BPF_XADD | BPF_W for word sizes)
@@ -76,26 +110,72 @@ int  xdp_avtp_func(struct xdp_md *ctx)
     //Start next header cursor position at data start
 	nh.pos = data;    
 
-    int nh_type = parse_ethhdr(&nh, data_end, &eth );
-
-    if( (listen_dst_mac[0] == eth->h_dest[0])
-                && (listen_dst_mac[1] == eth->h_dest[1])
-                && (listen_dst_mac[2] == eth->h_dest[2])
-                && (listen_dst_mac[3] == eth->h_dest[3])
-                && (listen_dst_mac[4] == eth->h_dest[4])
-                && (listen_dst_mac[5] == eth->h_dest[5]) ){
-        if( nh_type == bpf_htons(0x22f0) || nh_type == 0x22f0){
+	int nh_type = parse_ethhdr(&nh, data_end, &eth);
+	
+    
+    if( nh_type == bpf_htons(ETH_P_TSN) ||  nh_type == ETH_P_TSN ){
             
-            rec->rx_pkt_cnt++;
-            if( rec->rx_pkt_cnt % SAMPLEBUF_PACKET_RATIO == 0){
-                rec->accu_rx_timestamp = 0x12345678;
+        if( (listen_dst_mac[0] == eth->h_dest[0])
+                    && (listen_dst_mac[1] == eth->h_dest[1])
+                    && (listen_dst_mac[2] == eth->h_dest[2])
+                    && (listen_dst_mac[3] == eth->h_dest[3])
+                    && (listen_dst_mac[4] == eth->h_dest[4])
+                    && (listen_dst_mac[5] == eth->h_dest[5]) ){
+
+            seventeen22_header_t *hdr1722;
+            __u8 proto1722 = parse_1722hdr(&nh, data_end, &hdr1722);
+                
+            if( 0xff == proto1722)
                 return XDP_PASS;
-            } else {
-                rec->accu_rx_timestamp = 0xeeeeeeee;
-                return XDP_DROP;
+            if( bpf_htons(proto1722) == 0x00
+                        && (listen_stream_id[0] == hdr1722->stream_id[0])
+                        && (listen_stream_id[1] == hdr1722->stream_id[1])
+                        && (listen_stream_id[2] == hdr1722->stream_id[2])
+                        && (listen_stream_id[3] == hdr1722->stream_id[3])
+                        && (listen_stream_id[4] == hdr1722->stream_id[4])
+                        && (listen_stream_id[5] == hdr1722->stream_id[5])
+                        && (listen_stream_id[6] == hdr1722->stream_id[6])
+                        && (listen_stream_id[7] == hdr1722->stream_id[7]) ){
+
+                six1883_header_t *hdr61883;
+                __u8 audioChannels = parse_61883hdr(&nh, data_end, &hdr61883);
+                if( 0xff == audioChannels )
+                    return XDP_DROP;
+    
+                __u32 *avtpSamples = (__u32*)nh.pos;
+                if( avtpSamples + 6*AUDIO_CHANNELS > data_end)
+                    return XDP_DROP;
+    
+    
+                int i,j;
+                #pragma unroll
+                for(j=0; j<AUDIO_CHANNELS;j++){
+
+                    #pragma unroll
+                    for(i=0; i<6*AUDIO_CHANNELS;i+=AUDIO_CHANNELS){
+                        if( !avtpSamples[i+j] )
+                            return XDP_DROP;
+                        __u32 sample = bpf_htonl(avtpSamples[i+j]) & 0x00ffffff;
+                        sample <<= 8;
+                        rec->sampleBuffer[j][i] = (int) sample;// use tail here
+                        rec->sampleCounter++;
+                    }
+                }
+
+
+
+                rec->rx_pkt_cnt++;
+                if( rec->rx_pkt_cnt % SAMPLEBUF_PACKET_RATIO == 0){
+                    rec->accu_rx_timestamp = 0x12345678;
+                    return XDP_PASS;
+                } else {
+                    rec->accu_rx_timestamp = 0xeeeeeeee;
+                    return XDP_DROP;
+                }
             }
-        } 
+        }
     }
+    
     return XDP_DROP;
     //return XDP_PASS;
 }
