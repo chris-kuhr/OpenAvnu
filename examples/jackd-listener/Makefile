@@ -1,4 +1,4 @@
-XDP_TARGETS  := xdp_avb_kern
+XDP_TARGETS  := xdp_avb_L3_kern xdp_avb_MCL_kern
 USER_TARGETS := jackd_listener
 LOADER_TARGETS := loader
 
