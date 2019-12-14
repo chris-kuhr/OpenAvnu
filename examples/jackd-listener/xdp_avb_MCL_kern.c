@@ -64,7 +64,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
  //   __u8 listen_stream_id[8] =   {0x00,0x22,0x97,0x00,0x41,0x2c,0x00,0x00};
 	void *data_end = (void *)(long)ctx->data_end;
 	void *data = (void *)(long)ctx->data;
-	struct datarec *rec = NULL;
+	//struct datarec *rec = NULL;
 
     //     Lookup in kernel BPF-side return pointer to actual data record
     //__u32 key = XDP_PASS;
