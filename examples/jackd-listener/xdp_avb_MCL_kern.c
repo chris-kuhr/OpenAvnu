@@ -77,11 +77,11 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	nh.pos = data;
 
     if( (listen_dst_mac[0] == (__u8)*data)
-                && (listen_dst_mac[1] == (__u8)*(data + 1))
-                && (listen_dst_mac[2] == (__u8)*(data + 2))
-                && (listen_dst_mac[3] == (__u8)*(data + 3))
-                && (listen_dst_mac[4] == (__u8)*(data + 4))
-                && (listen_dst_mac[5] == (__u8)*(data + 5)) ){
+                && (listen_dst_mac[1] == *((__u8*)data + 1))
+                && (listen_dst_mac[2] == *((__u8*)data + 2))
+                && (listen_dst_mac[3] == *((__u8*)data + 3))
+                && (listen_dst_mac[4] == *((__u8*)data + 4))
+                && (listen_dst_mac[5] == *((__u8*)data + 5)) ){
 	/*int nh_type = parse_ethhdr(&nh, data_end, &eth);
 	    
 
