@@ -113,7 +113,7 @@ int  xdp_avtp_func(struct xdp_md *ctx)
 	
     
     if( nh_type == bpf_htons(ETH_P_TSN) ){
-            
+        return XDP_DROP;    
         if( (listen_dst_mac[0] == eth->h_dest[0])
                     && (listen_dst_mac[1] == eth->h_dest[1])
                     && (listen_dst_mac[2] == eth->h_dest[2])
