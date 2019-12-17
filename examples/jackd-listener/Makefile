@@ -11,11 +11,11 @@ CFLAGS = $(OPT) $(WARN) -std=gnu99
 CPPFLAGS = -I$(DAEMONS_DIR)/mrpd -I$(MRPCLIENT_DIR) -I$(DAEMONS_DIR)/common
 LDLIBS = -ljack -lpthread
 
-all: jack_listener
+all: jackd_listener
 
-jack_listener: jack_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
+jack_listener: jackd_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
 
-jack_listener.o: jack_listener.c avb_sockets.c
+jack_listener.o: jackd_listener.c avb_sockets.c
 
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@

@@ -340,7 +340,7 @@ jack_client_t* init_jack(struct mrp_listener_ctx *ctx)
 {
 	const char* client_name = "simple_listener";
 	const char* server_name = "AVB_Processing";
-	jack_options_t options = JackNoStartServer | JackUseExactName | JackServerName;
+	jack_options_t options = JackNoStartServer | /*JackUseExactName |*/ JackServerName;
 	jack_status_t status;
 
 	client = jack_client_open (client_name, options, &status, server_name);
