@@ -13,9 +13,9 @@ LDLIBS = -ljack -lpthread
 
 all: jackd_listener
 
-jack_listener: jackd_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
+jackd_listener: jackd_listener.o avb_sockets.o $(MRPLISTENER_TARGETS)
 
-jack_listener.o: jackd_listener.c avb_sockets.c
+jackd_listener.o: jackd_listener.c avb_sockets.c
 
 $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	make -C $(MRPCLIENT_DIR) $@
@@ -24,5 +24,5 @@ $(MRPCLIENT_DIR)/%.o: $(MRPCLIENT_DIR)/%.c $(MRPCLIENT_DIR)/%.h
 	$(CC) $^ $(LDLIBS) -o $@
 
 clean:
-	$(RM) jack_listener
+	$(RM) jackd_listener
 	$(RM) `find . -name "*~" -o -name "*.[oa]" -o -name "\#*\#" -o -name TAGS -o -name core -o -name "*.orig"`
